@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select'
 import ThemeToggle from '../theme/theme-toggle'
 import { navigationLinks } from './sidebar'
+import { useRouter } from 'next/navigation'
 
 const languages = [
   { value: 'pt-BR', label: 'Pt-BR' },
@@ -39,6 +40,7 @@ interface HeaderProps {
 
 export default function Header({ expanded, setExpanded }: HeaderProps) {
   const id = useId()
+  const router = useRouter()
 
   return (
     <div className="absolute top-0 left-0 w-full">
@@ -109,14 +111,14 @@ export default function Header({ expanded, setExpanded }: HeaderProps) {
             {/* Logo e botão de expandir menu */}
             <div className="flex items-center gap-10">
               <div
-                className="hover:bg-popover p-2 rounded-md cursor-pointer transition-colors duration-200 hidden md:flex"
+                className="hover:bg-popover p-3 rounded-md cursor-pointer transition-colors duration-200 hidden md:flex"
                 onClick={() => setExpanded(!expanded)}
               >
                 <PanelLeft size={18} />
               </div>
               <a
-                href="#"
-                className="text-primary flex gap-2 items-center hover:text-primary/90"
+                className="cursor-pointer text-primary flex gap-2 items-center hover:text-primary/90"
+                onClick={() => router.push('/')}
               >
                 <Logo />
                 <span className="font-semibold tracking-wide">
@@ -131,7 +133,7 @@ export default function Header({ expanded, setExpanded }: HeaderProps) {
             <Select defaultValue="en">
               <SelectTrigger
                 id={`language-${id}`}
-                className="[&>svg]:text-muted-foreground/80 hover:bg-accent hover:text-accent-foreground h-8 border-none px-2 shadow-none [&>svg]:shrink-0"
+                className="cursor-pointer [&>svg]:text-muted-foreground/80 hover:bg-accent hover:text-accent-foreground h-8 border-none px-2 shadow-none [&>svg]:shrink-0"
                 aria-label="Select language"
               >
                 <GlobeIcon size={16} aria-hidden="true" />

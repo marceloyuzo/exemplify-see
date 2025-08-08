@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button'
+'use client'
 
 export default function Home() {
-  return <Button> teste</Button>
+  return <></>
 }

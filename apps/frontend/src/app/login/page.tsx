@@ -1,3 +1,6 @@
+'use client'
+
+import { signIn } from '@/api/auth/sign-in'
 import GoogleIconColorful from '@/components/icon/google-icon-colorful'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,8 +11,59 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { auth, googleProvider } from '@/lib/firebase'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { signInWithPopup } from 'firebase/auth'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 export default function Login() {
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const [loading, setLoading] = useState<boolean>(false)
+
+  const { mutateAsync: authenticate } = useMutation({
+    mutationFn: signIn,
+  })
+
+  async function handleSignInWithGoogle() {
+    if (loading) return
+    setLoading(true)
+
+    try {
+      const userCredential = await signInWithPopup(auth, googleProvider)
+
+      const token = await userCredential.user.getIdToken()
+
+      const response = await authenticate({ token })
+
+      toast.success(`Bem-vindo, ${response.data.user.name}!`, {
+        description: response.data.message,
+        position: 'top-center',
+        duration: 5000,
+      })
+      await queryClient.invalidateQueries({ queryKey: ['profile'] })
+      router.push('/')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      if (err.code === 'auth/popup-closed-by-user') {
+        toast.warning('Você fechou o popup de login.', {
+          position: 'top-center',
+          duration: 5000,
+        })
+        return
+      }
+
+      toast.error('Erro ao entrar com o Google', {
+        position: 'top-center',
+        duration: 5000,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
@@ -21,9 +75,15 @@ export default function Login() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button variant="outline" className="w-full cursor-pointer">
+        <Button
+          variant="outline"
+          className="w-full cursor-pointer"
+          type="button"
+          onClick={() => handleSignInWithGoogle()}
+          disabled={loading}
+        >
           <GoogleIconColorful />
-          Entra com Google
+          {loading ? 'Entrando...' : 'Entrar com Google'}
         </Button>
       </CardContent>
       <CardFooter className="flex-col gap-10">

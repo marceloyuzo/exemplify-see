@@ -6,10 +6,11 @@ import {
   NavigationMenuList,
 } from './ui/navigation-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { useRouter } from 'next/navigation'
 
 // Links de navegação
 export const navigationLinks = [
-  { href: '#', label: 'Home', icon: HomeIcon, active: true },
+  { href: '/', label: 'Home', icon: HomeIcon, active: true },
   { href: '#', label: 'Plano de Aula', icon: Compass },
   { href: '#', label: 'Ensino da Teoria', icon: GraduationCap },
   { href: '#', label: 'Repositório', icon: Folders },
@@ -20,6 +21,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ expanded }: SidebarProps) {
+  const router = useRouter()
+
   return (
     <nav
       className={`hidden md:absolute md:mt-16 md:flex md:flex-col md:bg-muted md:border-r md:p-4 md:h-[calc(100vh-64px)] md:transition-all md:duration-200 ${
@@ -33,8 +36,8 @@ export default function Sidebar({ expanded }: SidebarProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <NavigationMenuLink
-                    href={link.href}
                     className={`w-full flex flex-row items-center gap-2 p-3 rounded-md transition-colors`}
+                    onClick={() => router.push(link.href)}
                   >
                     <link.icon size={20} />
                     {expanded && <span>{link.label}</span>}
