@@ -1,7 +1,6 @@
-import Header from '@/components/header'
 import './globals.css'
-import type { ReactNode } from 'react'
-import SideMenu from '@/components/side-menu'
+import { type ReactNode } from 'react'
+import { Providers } from './providers'
 
 export const metadata = {
   title: 'Exemplify SEE',
@@ -10,11 +9,12 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <body>
-        <Header />
-        <SideMenu />
-        <main className="mx-96 flex justify-center">{children}</main>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <link rel="stylesheet" href="dist/frappe-gantt.css" />
+      </head>
+      <body className="min-h-screen">
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
