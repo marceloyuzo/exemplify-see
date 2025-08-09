@@ -4,7 +4,13 @@ import type { NextRequest } from 'next/server'
 import { jwtDecode } from 'jwt-decode'
 
 interface TokenPayload {
-  isAdmin?: boolean
+  sub: string
+  email: string
+  firebaseUid: string
+  role: 'admin' | 'user'
+  photoURL: string
+  iat: number
+  exp: number
 }
 
 const PUBLIC_ROUTES = ['/login', '/register']
@@ -19,8 +25,7 @@ export function middleware(req: NextRequest) {
   if (token) {
     try {
       const decoded = jwtDecode<TokenPayload>(token)
-      console.log(decoded)
-      isAdmin = !!decoded.isAdmin
+      isAdmin = decoded.role === 'admin'
     } catch (err) {
       // token inválido, tratar como não autenticado
       url.pathname = '/login'

@@ -16,11 +16,15 @@ export class UsersController {
     @Query('name') name?: string,
     @Query('role') role?: string,
   ) {
+    const validRoles = ['user', 'admin'] as const;
+
+    const roleParam = validRoles.includes(role as any) ? (role as 'user' | 'admin') : undefined;
+
     return this.usersService.findManyUsers({
       page: Number(page),
       perPage: Number(perPage),
       name,
-      role,
+      role: roleParam,
     })
   }
 }
