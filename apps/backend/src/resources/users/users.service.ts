@@ -3,6 +3,13 @@ import { User } from 'generated/prisma'
 import { PrismaService } from 'src/database/services/prisma.service'
 import { CreateUserDto } from './dto/create-user-dto'
 
+interface FindAllParams {
+  page: number
+  perPage: number
+  name?: string
+  role?: string
+}
+
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name)
@@ -41,6 +48,38 @@ export class UsersService {
         email,
       },
     })
+  }
+
+  async findManyUsers(params: FindAllParams) {
+    const { page, perPage, name, role } = params
+
+    const where: any = {}
+    if (name) {
+      where.name = { contains: name, mode: 'insensitive' }
+    }
+    if (role) {
+      where.role = role
+    }
+
+    const total = await this.prisma.user.count({ where })
+
+    // Busca paginada
+    const users = await this.prisma.user.findMany({
+      where,
+      skip: (page - 1) * perPage,
+      take: perPage,
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return {
+      data: users,
+      meta: {
+        total,
+        page,
+        perPage,
+        totalPages: Math.ceil(total / perPage),
+      },
+    }
   }
 
   async update(id: string, userData: Partial<CreateUserDto>): Promise<User> {

@@ -1,19 +1,15 @@
+import { User } from '@/hooks/use-user'
 import { api } from '@/lib/axios'
 
 export interface GetProfileResponse {
   success: boolean
-  user: {
-    id: string
-    email: string
-    name: string
-    photoURL: string
-  }
+  user: User
 }
 
-export async function getProfile() {
+export async function getProfile(): Promise<User> {
   const response = await api.get<GetProfileResponse>('/auth/me', {
     withCredentials: true,
   })
 
-  return response.data
+  return response.data.user
 }

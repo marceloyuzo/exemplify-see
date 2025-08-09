@@ -11,8 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { useUser } from '@/hooks/use-user'
 import { auth, googleProvider } from '@/lib/firebase'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { signInWithPopup } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -20,8 +21,8 @@ import { toast } from 'sonner'
 
 export default function Login() {
   const router = useRouter()
-  const queryClient = useQueryClient()
   const [loading, setLoading] = useState<boolean>(false)
+  const { refetch } = useUser()
 
   const { mutateAsync: authenticate } = useMutation({
     mutationFn: signIn,
@@ -43,7 +44,7 @@ export default function Login() {
         position: 'top-center',
         duration: 5000,
       })
-      await queryClient.invalidateQueries({ queryKey: ['profile'] })
+      refetch()
       router.push('/')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -65,49 +66,52 @@ export default function Login() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle className="mx-auto text-primary text-xl">
-          Acesse sua conta
-        </CardTitle>
-        <CardDescription className="mx-auto">
-          Entre de forma segura com sua conta Google
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button
-          variant="outline"
-          className="w-full cursor-pointer"
-          type="button"
-          onClick={() => handleSignInWithGoogle()}
-          disabled={loading}
-        >
-          <GoogleIconColorful />
-          {loading ? 'Entrando...' : 'Entrar com Google'}
-        </Button>
-      </CardContent>
-      <CardFooter className="flex-col gap-10">
-        <div className="flex flex-col gap-4">
-          <div>
-            <h4 className="text-primary text-sm">Colaboração Facilitada</h4>
-            <p className="text-xs">
-              Compartilhe planos de aula diretamente com colegas da mesma
-              instituição.
-            </p>
+    <section className="flex w-full min-h-[calc(100vh-160px)] justify-center items-center">
+      <Card className="w-full max-w-sm max-h-fit">
+        <CardHeader>
+          <CardTitle className="mx-auto text-primary text-xl">
+            Acesse sua conta
+          </CardTitle>
+          <CardDescription className="mx-auto">
+            Entre de forma segura com sua conta Google
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            className="w-full cursor-pointer"
+            type="button"
+            onClick={() => handleSignInWithGoogle()}
+            disabled={loading}
+          >
+            <GoogleIconColorful />
+            {loading ? 'Entrando...' : 'Entrar com Google'}
+          </Button>
+        </CardContent>
+        <CardFooter className="flex-col gap-10">
+          <div className="flex flex-col gap-4">
+            <div>
+              <h4 className="text-primary text-sm">Colaboração Facilitada</h4>
+              <p className="text-xs">
+                Compartilhe planos de aula diretamente com colegas da mesma
+                instituição.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-primary text-sm">Acesso Instantâneo</h4>
+              <p className="text-xs">
+                Sem necessidade de criar nova senha ou lembrar credenciais
+                extras.
+              </p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-primary text-sm">Acesso Instantâneo</h4>
-            <p className="text-xs">
-              Sem necessidade de criar nova senha ou lembrar credenciais extras.
-            </p>
-          </div>
-        </div>
 
-        <span className="text-center text-xs text-secondary-foreground">
-          Ao continuar, você concorda com nossos Termos de Uso e spanolítica de
-          Privacidade
-        </span>
-      </CardFooter>
-    </Card>
+          <span className="text-center text-xs text-secondary-foreground">
+            Ao continuar, você concorda com nossos Termos de Uso e spanolítica
+            de Privacidade
+          </span>
+        </CardFooter>
+      </Card>
+    </section>
   )
 }
