@@ -33,7 +33,8 @@ export class JwtAuthGuard implements CanActivate {
       })
 
       const user = await this.usersService.findById(payload.sub)
-      if (!user) {
+
+      if (!user || !user.isActive) {
         this.logger.warn(`Usuário inválido: ${payload.email}`)
         throw new UnauthorizedException('Usuário inválido')
       }
@@ -48,6 +49,7 @@ export class JwtAuthGuard implements CanActivate {
           sub: user.id,
           email: user.email,
           firebaseUid: user.firebaseUid,
+          role: user.role,
           photoURL: user.photoURL,
         }
 

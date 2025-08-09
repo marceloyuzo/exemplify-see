@@ -1,6 +1,6 @@
 import { api } from '@/lib/axios'
 
-export interface SignInBody {
+export interface SignInProps {
   token: string
 }
 
@@ -14,7 +14,7 @@ interface SignInResponse {
   message: string
 }
 
-export async function signIn({ token }: SignInBody) {
+export async function signIn({ token }: SignInProps) {
   const response = await api.post<SignInResponse>(
     '/auth/login',
     {},

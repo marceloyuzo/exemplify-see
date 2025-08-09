@@ -44,6 +44,8 @@ export class AuthService {
         sub: user.id,
         email: user.email,
         firebaseUid: user.firebaseUid,
+        role: user.role,
+        photoURL: user.photoURL,
       }
 
       const accessToken = this.jwtService.sign(payload, {
@@ -79,6 +81,8 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       firebaseUid: user.firebaseUid,
+      role: user.role,
+      photoURL: user.photoURL,
     }
 
     return this.jwtService.sign(payload, {

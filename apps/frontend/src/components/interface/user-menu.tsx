@@ -11,40 +11,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getProfile } from '@/api/auth/get-profile'
-import { signOut } from '@/api/auth/sign-out'
+
 import { toast } from 'sonner'
+import { useUser } from '@/hooks/use-user'
 
 export default function UserMenu() {
   const router = useRouter()
-  const queryClient = useQueryClient()
-
-  const { mutateAsync: signOutFn } = useMutation({
-    mutationFn: signOut,
-  })
-
-  const { data, error, isLoading } = useQuery({
-    queryKey: ['profile'],
-    queryFn: getProfile,
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  })
-
-  const user = data?.user
+  const { user, logout, isLoading, error } = useUser()
 
   async function handleSignOut() {
     try {
-      const response = await signOutFn()
+      logout()
 
-      toast.success(response.data.message, {
+      toast.success(`Logout realizado com sucesso`, {
         position: 'top-center',
         duration: 5000,
       })
-
-      queryClient.removeQueries({ queryKey: ['profile'] })
-
-      router.push('/login')
     } catch (error) {
       console.error('Erro no logout:', error)
     }

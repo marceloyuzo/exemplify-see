@@ -2,30 +2,37 @@
 
 import { ThemeProvider } from '@/theme/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import Interface from '@/components/interface'
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
+import Header from '@/components/interface/header'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/interface/app-sidebar'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <div className="relative flex min-h-screen flex-col">
-            {/* Header + Side Menu */}
-            <Interface />
-            <main className="flex flex-1 flex-col pt-16">
-              <div className="container mx-auto flex flex-1 items-center justify-center pt-8 max-w-7xl">
-                {children}
+      <SidebarProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <div className="flex flex-col min-h-screen w-full">
+              <Header />
+              <AppSidebar />
+
+              <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
+                <main className="flex-1 overflow-y-auto">
+                  <div className="container mx-auto max-w-7xl mt-10">
+                    {children}
+                  </div>
+                </main>
               </div>
-            </main>
-          </div>
-        </TooltipProvider>
-      </QueryClientProvider>
+            </div>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </SidebarProvider>
     </ThemeProvider>
   )
 }

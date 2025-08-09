@@ -10,9 +10,6 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <head>
-        <link rel="stylesheet" href="dist/frappe-gantt.css" />
-      </head>
       <body className="min-h-screen">
         <Providers>{children}</Providers>
       </body>
