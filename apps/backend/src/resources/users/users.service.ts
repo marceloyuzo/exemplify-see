@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { User } from 'generated/prisma'
+import { Prisma, User } from 'generated/prisma'
 import { PrismaService } from 'src/database/services/prisma.service'
 import { CreateUserDto } from './dto/create-user-dto'
 
@@ -7,7 +7,7 @@ interface FindAllParams {
   page: number
   perPage: number
   name?: string
-  role?: string
+  role?: 'user' | 'admin'
 }
 
 @Injectable()
@@ -53,7 +53,7 @@ export class UsersService {
   async findManyUsers(params: FindAllParams) {
     const { page, perPage, name, role } = params
 
-    const where: any = {}
+    const where: Prisma.UserWhereInput = {}
     if (name) {
       where.name = { contains: name, mode: 'insensitive' }
     }
