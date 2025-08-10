@@ -2,9 +2,8 @@ import { useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getProfile } from '@/api/auth/get-profile'
 import { signOut } from '@/api/auth/sign-out'
-import { updateUser, UpdateUserProps } from '@/api/users/update-user'
+import { updateProfile, UpdateProfileProps } from '@/api/users/update-profile'
 
-// Tipos
 export interface User {
   id: string
   firebaseUid: string
@@ -20,7 +19,7 @@ interface UserContextType {
   user: User | null
   isLoading: boolean
   error: Error | null
-  updateUserFn: (userData: UpdateUserProps) => Promise<User>
+  updateUserFn: (userData: UpdateProfileProps) => Promise<User>
   logout: () => void
   refetch: () => void
   isAuthenticated: boolean
@@ -52,21 +51,13 @@ export function useUser(): UserContextType {
 
   // Mutation para atualizar usuário
   const updateUserMutation = useMutation({
-    mutationFn: ({ id, email, name, role }: UpdateUserProps) =>
-      updateUser({ email, id, name, role }),
+    mutationFn: ({ id, email, name }: UpdateProfileProps) =>
+      updateProfile({ email, id, name }),
     onSuccess: (updatedUser) => {
-      console.log('User updated successfully:', updatedUser)
-
-      // Verifica se a resposta tem a estrutura correta
       const userData = updatedUser?.data || updatedUser
 
-      // Atualiza o cache com os novos dados
       queryClient.setQueryData(['currentUser'], userData)
-
-      // Invalida a query para forçar um refetch se necessário
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
-
-      // Invalida outras queries relacionadas se necessário
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
     onError: (error) => {
@@ -74,46 +65,39 @@ export function useUser(): UserContextType {
     },
   })
 
-  // Mutation para logout
   const logoutMutation = useMutation({
     mutationFn: signOut,
     onSuccess: () => {
-      // Limpa todos os dados do cache
       queryClient.clear()
-      // Ou redireciona para login
       window.location.href = '/login'
     },
   })
 
   // Função para atualizar usuário
   const updateUserFn = useCallback(
-    async (userData: UpdateUserProps) => {
+    async (userData: UpdateProfileProps) => {
       if (!user?.id) {
         throw new Error('No user logged in')
       }
 
-      // Mescla os dados atuais com os novos dados
       const updateData = {
-        id: userData.id || user.id,
+        id: user.id,
         email: userData.email || user.email,
         name: userData.name || user.name,
-        role: userData.role || user.role,
+        role: user.role,
       }
 
       const result = await updateUserMutation.mutateAsync(updateData)
 
-      // Retorna os dados corretos baseado na estrutura da resposta
       return result?.data || result
     },
     [user, updateUserMutation],
   )
 
-  // Função para logout
   const logout = useCallback(() => {
     logoutMutation.mutate()
   }, [logoutMutation])
 
-  // Verificar se usuário tem determinado papel
   const hasRole = useCallback(
     (roles: string | string[]) => {
       if (!user) return false
@@ -123,10 +107,7 @@ export function useUser(): UserContextType {
     [user],
   )
 
-  // Verificar se é admin
   const isAdmin = useMemo(() => user?.role === 'admin', [user?.role])
-
-  // Verificar se está autenticado
   const isAuthenticated = useMemo(() => !!user && !error, [user, error])
 
   return {

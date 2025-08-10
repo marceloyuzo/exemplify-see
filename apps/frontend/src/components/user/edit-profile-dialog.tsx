@@ -71,6 +71,8 @@ export default function EditProfileDialog({
         position: 'top-center',
         duration: 3000,
       })
+
+      reset()
     }
   }
 

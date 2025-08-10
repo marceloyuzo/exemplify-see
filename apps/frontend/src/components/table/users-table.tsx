@@ -672,6 +672,7 @@ export default function TableUser() {
 
 function RowActions({ row }: { row: Row<Item> }) {
   const [open, setOpen] = useState(false)
+  console.log(row)
 
   return (
     <>
@@ -709,6 +710,7 @@ function RowActions({ row }: { row: Row<Item> }) {
       </DropdownMenu>
 
       <EditUserDialog
+        key={row.original.id}
         open={open}
         setOpen={setOpen}
         id={row.original.id}

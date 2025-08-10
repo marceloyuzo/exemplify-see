@@ -61,6 +61,8 @@ export default function EditUserDialog({
     },
   })
 
+  console.log(name, role, email)
+
   async function onSubmit({ email, name, role }: EditUserSchema) {
     try {
       await updateUser({
@@ -82,6 +84,8 @@ export default function EditUserDialog({
         position: 'top-center',
         duration: 3000,
       })
+
+      reset()
     }
   }
 

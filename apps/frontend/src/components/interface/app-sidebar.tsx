@@ -47,8 +47,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar
       className="top-16"
       collapsible="icon"
-      {...props}
       onMouseLeave={() => setOpen(false)}
+      {...props}
     >
       <SidebarContent>
         <NavMenu items={menuData} />

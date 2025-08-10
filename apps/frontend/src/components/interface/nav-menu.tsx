@@ -14,6 +14,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 
 type SidebarItem = {
@@ -25,6 +26,8 @@ type SidebarItem = {
 }
 
 export function NavMenu({ items }: { items: SidebarItem[] }) {
+  const { setOpen } = useSidebar()
+
   return (
     <SidebarGroup>
       <SidebarMenu className="gap-6">
@@ -42,7 +45,7 @@ export function NavMenu({ items }: { items: SidebarItem[] }) {
                     tooltip={item.title}
                     className="cursor-pointer"
                   >
-                    {item.icon && <item.icon />}
+                    {item.icon && <item.icon onClick={() => setOpen(true)} />}
                     <span>{item.title}</span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>

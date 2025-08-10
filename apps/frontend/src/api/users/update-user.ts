@@ -8,8 +8,7 @@ export interface UpdateUserProps {
 }
 
 export async function updateUser({ email, id, name, role }: UpdateUserProps) {
-  const response = await api.put(`/users/update`, {
-    id,
+  const response = await api.put(`/users/update-user/${id}`, {
     email,
     name,
     role,

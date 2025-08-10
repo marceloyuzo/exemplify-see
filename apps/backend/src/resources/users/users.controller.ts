@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Logger,
+  Param,
   Put,
   Query,
   UseGuards,
@@ -10,6 +11,7 @@ import {
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard'
 import { UsersService } from './users.service'
 import { EditUserDto } from './dto/edit-user-dto'
+import { AdminGuard } from 'src/common/guards/admin.guard'
 
 @Controller('/users')
 export class UsersController {
@@ -17,14 +19,26 @@ export class UsersController {
 
   constructor(private usersService: UsersService) {}
 
-  @Put('/update')
+  @Put('/update-profile/:id')
   @UseGuards(JwtAuthGuard)
-  async updateProfile(@Body() { id, name, email, role }: EditUserDto) {
+  async updateProfile(
+    @Param('id') id: string,
+    @Body() { name, email, role }: EditUserDto,
+  ) {
+    return await this.usersService.update(id, { email, name, role })
+  }
+
+  @Put('/update-user/:id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async updateUser(
+    @Param('id') id: string,
+    @Body() { name, email, role }: EditUserDto,
+  ) {
     return await this.usersService.update(id, { email, name, role })
   }
 
   @Get('/buscar-usuarios')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async findUsers(
     @Query('page') page: string = '1',
     @Query('perPage') perPage: string = '10',

@@ -9,10 +9,6 @@ import {
 export class EditUserDto {
   @IsString()
   @IsNotEmpty()
-  id: string
-
-  @IsString()
-  @IsNotEmpty()
   name: string
 
   @IsEmail()
