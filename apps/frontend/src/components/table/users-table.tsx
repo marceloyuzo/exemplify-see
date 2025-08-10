@@ -83,6 +83,7 @@ import {
 } from '@/components/ui/table'
 import { useQuery } from '@tanstack/react-query'
 import { findUsers } from '@/api/users/find-users'
+import EditUserDialog from '../user/edit-user-dialog'
 
 type Item = {
   id: string
@@ -148,13 +149,14 @@ const columns: ColumnDef<Item>[] = [
     size: 220,
   },
   {
-    header: 'Role',
+    header: 'Papel',
     accessorKey: 'role',
     cell: ({ row }) => (
       <Badge
         className={cn(
-          row.getValue('role') === 'admin' &&
-            'bg-muted-foreground/60 text-primary-foreground',
+          row.getValue('role') === 'admin'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-secondary text-card',
         )}
       >
         {row.getValue('role')}
@@ -203,7 +205,6 @@ export default function TableUser() {
     return () => clearTimeout(timer)
   }, [nameFilter])
 
-  // Reset para primeira página quando filtros mudam
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
   }, [debouncedNameFilter, roleFilter])
@@ -212,8 +213,8 @@ export default function TableUser() {
 
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: 'name',
-      desc: false,
+      id: 'createdAt',
+      desc: true,
     },
   ])
 
@@ -244,12 +245,10 @@ export default function TableUser() {
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
     enableSortingRemoval: false,
-    // Configuração para paginação server-side
     manualPagination: true,
     rowCount: data?.meta.total || 0,
     onPaginationChange: setPagination,
     onColumnVisibilityChange: setColumnVisibility,
-    // Desabilitamos filtros client-side já que usamos server-side
     manualFiltering: true,
     state: {
       sorting,
@@ -258,7 +257,6 @@ export default function TableUser() {
     },
   })
 
-  // Opções de roles disponíveis (você pode buscar isso da API ou definir estaticamente)
   const availableRoles = useMemo(() => ['admin', 'user'], [])
 
   const handleRoleChange = (checked: boolean, value: string) => {
@@ -345,7 +343,6 @@ export default function TableUser() {
             )}
           </div>
 
-          {/* Filter by role */}
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" disabled={isFetching}>
@@ -674,44 +671,51 @@ export default function TableUser() {
 }
 
 function RowActions({ row }: { row: Row<Item> }) {
-  async function handleEditUser() {
-    console.log(row)
-  }
-
-  // async function handleDesactiveUser() {}
+  const [open, setOpen] = useState(false)
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="flex justify-end">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="shadow-none cursor-pointer"
-            aria-label="Editar item"
-          >
-            <EllipsisIcon size={16} aria-hidden="true" />
-          </Button>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            className="flex justify-between cursor-pointer"
-            onClick={handleEditUser}
-          >
-            <span>Editar</span>
-            <Pencil size={14} />
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem className="text-destructive focus:text-destructive flex justify-between cursor-pointer">
-            <span>Excluir</span>
-            <Trash size={14} />
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div className="flex justify-end">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="shadow-none cursor-pointer"
+              aria-label="Editar item"
+            >
+              <EllipsisIcon size={16} aria-hidden="true" />
+            </Button>
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              className="flex justify-between cursor-pointer"
+              onSelect={() => setOpen(true)}
+            >
+              <span>Editar</span>
+              <Pencil size={14} />
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem className="text-destructive focus:text-destructive flex justify-between cursor-pointer">
+              <span>Excluir</span>
+              <Trash size={14} />
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <EditUserDialog
+        open={open}
+        setOpen={setOpen}
+        id={row.original.id}
+        name={row.original.name}
+        email={row.original.email}
+        role={row.original.role}
+      />
+    </>
   )
 }

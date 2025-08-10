@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getProfile } from '@/api/auth/get-profile'
 import { signOut } from '@/api/auth/sign-out'
+import { updateUser, UpdateUserProps } from '@/api/users/update-user'
 
 // Tipos
 export interface User {
@@ -19,7 +20,7 @@ interface UserContextType {
   user: User | null
   isLoading: boolean
   error: Error | null
-  updateUser: (userData: Partial<User>) => Promise<void>
+  updateUserFn: (userData: UpdateUserProps) => Promise<User>
   logout: () => void
   refetch: () => void
   isAuthenticated: boolean
@@ -27,51 +28,6 @@ interface UserContextType {
   isAdmin: boolean
 }
 
-// Simulação de APIs - substitua pelas suas APIs reais
-const userApi = {
-  // Buscar usuário atual (normalmente do token JWT ou sessão)
-  getCurrentUser: async (): Promise<User> => {
-    const response = await fetch('/api/auth/me', {
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      throw new Error('Failed to fetch user')
-    }
-    return response.json()
-  },
-
-  // Atualizar usuário
-  updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
-    const response = await fetch(`/api/users/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      throw new Error('Failed to update user')
-    }
-    return response.json()
-  },
-
-  // Logout
-  logout: async (): Promise<void> => {
-    const response = await fetch('/api/auth/logout', {
-      method: 'POST',
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      throw new Error('Failed to logout')
-    }
-  },
-}
-
-/**
- * Hook para gerenciar o estado do usuário atual
- * @returns {UserContextType} Objeto com informações e funções do usuário
- */
 export function useUser(): UserContextType {
   const queryClient = useQueryClient()
 
@@ -96,13 +52,25 @@ export function useUser(): UserContextType {
 
   // Mutation para atualizar usuário
   const updateUserMutation = useMutation({
-    mutationFn: ({ id, userData }: { id: string; userData: Partial<User> }) =>
-      userApi.updateUser(id, userData),
+    mutationFn: ({ id, email, name, role }: UpdateUserProps) =>
+      updateUser({ email, id, name, role }),
     onSuccess: (updatedUser) => {
+      console.log('User updated successfully:', updatedUser)
+
+      // Verifica se a resposta tem a estrutura correta
+      const userData = updatedUser?.data || updatedUser
+
       // Atualiza o cache com os novos dados
-      queryClient.setQueryData(['currentUser'], updatedUser)
+      queryClient.setQueryData(['currentUser'], userData)
+
+      // Invalida a query para forçar um refetch se necessário
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+
       // Invalida outras queries relacionadas se necessário
       queryClient.invalidateQueries({ queryKey: ['users'] })
+    },
+    onError: (error) => {
+      console.error('Error updating user:', error)
     },
   })
 
@@ -118,18 +86,26 @@ export function useUser(): UserContextType {
   })
 
   // Função para atualizar usuário
-  const updateUser = useCallback(
-    async (userData: Partial<User>) => {
+  const updateUserFn = useCallback(
+    async (userData: UpdateUserProps) => {
       if (!user?.id) {
         throw new Error('No user logged in')
       }
 
-      await updateUserMutation.mutateAsync({
-        id: user.id,
-        userData,
-      })
+      // Mescla os dados atuais com os novos dados
+      const updateData = {
+        id: userData.id || user.id,
+        email: userData.email || user.email,
+        name: userData.name || user.name,
+        role: userData.role || user.role,
+      }
+
+      const result = await updateUserMutation.mutateAsync(updateData)
+
+      // Retorna os dados corretos baseado na estrutura da resposta
+      return result?.data || result
     },
-    [user?.id, updateUserMutation],
+    [user, updateUserMutation],
   )
 
   // Função para logout
@@ -158,7 +134,7 @@ export function useUser(): UserContextType {
     isLoading:
       isLoading || updateUserMutation.isPending || logoutMutation.isPending,
     error: error || updateUserMutation.error || logoutMutation.error,
-    updateUser,
+    updateUserFn,
     logout,
     refetch,
     isAuthenticated,

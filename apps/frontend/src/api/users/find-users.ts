@@ -32,7 +32,7 @@ export async function findUsers({
   name,
   role,
 }: FindUsersProps): Promise<FindUsersResponse> {
-  const response = await api.get<FindUsersResponse>('/users', {
+  const response = await api.get<FindUsersResponse>('/users/buscar-usuarios', {
     params: {
       page,
       perPage,

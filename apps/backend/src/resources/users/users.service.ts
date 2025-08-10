@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { Prisma, User } from 'generated/prisma'
 import { PrismaService } from 'src/database/services/prisma.service'
 import { CreateUserDto } from './dto/create-user-dto'
+import { EditUserDto } from './dto/edit-user-dto'
 
 interface FindAllParams {
   page: number
@@ -82,7 +83,7 @@ export class UsersService {
     }
   }
 
-  async update(id: string, userData: Partial<CreateUserDto>): Promise<User> {
+  async update(id: string, userData: Partial<EditUserDto>): Promise<User> {
     const user = await this.prisma.user.update({
       where: { id },
       data: {

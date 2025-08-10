@@ -32,12 +32,6 @@ export class AuthService {
           name: decodedToken.name,
           photoURL: decodedToken.picture,
         })
-      } else {
-        user = await this.usersService.update(user.id, {
-          name: decodedToken.name,
-          email: decodedToken.email,
-          photoURL: decodedToken.picture,
-        })
       }
 
       const payload = {

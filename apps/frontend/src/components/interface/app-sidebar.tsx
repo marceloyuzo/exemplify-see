@@ -2,12 +2,18 @@
 
 import * as React from 'react'
 import { Bot, Frame, SquareTerminal } from 'lucide-react'
-import { Sidebar, SidebarContent, SidebarRail } from '@/components/ui/sidebar'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarRail,
+  useSidebar,
+} from '@/components/ui/sidebar'
 import { NavMenu } from './nav-menu'
 import { useUser } from '@/hooks/use-user'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isAdmin } = useUser()
+  const { setOpen } = useSidebar()
 
   const menuData = [
     { title: 'Início', url: '/', icon: Frame },
@@ -38,7 +44,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ]
 
   return (
-    <Sidebar className="top-16" collapsible="icon" {...props}>
+    <Sidebar
+      className="top-16"
+      collapsible="icon"
+      {...props}
+      onMouseLeave={() => setOpen(false)}
+    >
       <SidebarContent>
         <NavMenu items={menuData} />
       </SidebarContent>

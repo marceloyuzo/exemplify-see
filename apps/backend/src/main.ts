@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { AppModule } from './app.module'
 import cookieParser from 'cookie-parser'
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap')
@@ -14,6 +15,8 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   )
+
+  app.useGlobalInterceptors(new LoggingInterceptor())
 
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
