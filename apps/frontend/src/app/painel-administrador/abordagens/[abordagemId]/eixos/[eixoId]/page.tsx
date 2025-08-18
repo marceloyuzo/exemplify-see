@@ -220,6 +220,7 @@ export default function EixoPage() {
         centerContent()
       }, 100)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes.length])
 
   if (isLoadingAxis || isLoadingQuestions) {

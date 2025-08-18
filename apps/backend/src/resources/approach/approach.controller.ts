@@ -51,7 +51,7 @@ export class ApproachController {
   async edit(@Param('id') id: string, @Body() { title }: EditApproachDto) {
     return await this.approachService.editApproach({
       id,
-      title
+      title,
     })
   }
 
