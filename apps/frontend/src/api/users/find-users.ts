@@ -3,6 +3,7 @@ import { api } from '@/lib/axios'
 interface FindUsersProps {
   page: number
   perPage: number
+  orderBy: string
   name?: string
   role?: string
 }
@@ -29,13 +30,15 @@ export interface FindUsersResponse {
 export async function findUsers({
   page,
   perPage,
+  orderBy,
   name,
   role,
 }: FindUsersProps): Promise<FindUsersResponse> {
-  const response = await api.get<FindUsersResponse>('/users/buscar-usuarios', {
+  const response = await api.get<FindUsersResponse>('/users', {
     params: {
       page,
       perPage,
+      orderBy,
       name,
       role,
     },

@@ -9,6 +9,7 @@ interface FindAllParams {
   perPage: number
   name?: string
   role?: 'user' | 'admin'
+  orderBy: string
 }
 
 @Injectable()
@@ -51,9 +52,7 @@ export class UsersService {
     })
   }
 
-  async findManyUsers(params: FindAllParams) {
-    const { page, perPage, name, role } = params
-
+  async findManyUsers({ orderBy, page, perPage, name, role }: FindAllParams) {
     const where: Prisma.UserWhereInput = {}
     if (name) {
       where.name = { contains: name, mode: 'insensitive' }
@@ -69,7 +68,7 @@ export class UsersService {
       where,
       skip: (page - 1) * perPage,
       take: perPage,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: orderBy === 'asc' ? 'asc' : 'desc' },
     })
 
     return {

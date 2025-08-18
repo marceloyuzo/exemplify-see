@@ -1,7 +1,6 @@
 'use client'
 
-import * as React from 'react'
-import { Bot, Frame, SquareTerminal } from 'lucide-react'
+import { Folders, Frame, HomeIcon, Settings } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -16,12 +15,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { setOpen } = useSidebar()
 
   const menuData = [
-    { title: 'Início', url: '/', icon: Frame },
-    { title: 'Plano de Aula', url: '#', icon: Frame },
+    { title: 'Início', url: '/', icon: HomeIcon },
+    { title: 'Plano de Aula', url: '/plano-de-aula', icon: Frame },
     {
       title: 'Repositório',
       url: '#',
-      icon: SquareTerminal,
+      icon: Folders,
       items: [
         { title: 'Exemplos', url: '#' },
         { title: 'Planos de Aula', url: '#' },
@@ -32,11 +31,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: 'Painel Administrador',
             url: '#',
-            icon: Bot,
+            icon: Settings,
             items: [
               { title: 'Usuários', url: '/painel-administrador/usuarios' },
-              { title: 'Abordagens', url: '#' },
-              { title: 'Exemplos', url: '#' },
+              { title: 'Abordagens', url: '/painel-administrador/abordagens' },
+              { title: 'Exemplos', url: '/painel-administrador/exemplos' },
             ],
           },
         ]

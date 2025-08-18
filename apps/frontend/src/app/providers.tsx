@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/sonner'
 import Header from '@/components/interface/header'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/interface/app-sidebar'
+import { ReactFlowProvider } from '@xyflow/react'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
@@ -16,21 +17,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <SidebarProvider>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <div className="flex flex-col min-h-screen w-full">
-              <Header />
-              <AppSidebar />
+          <ReactFlowProvider>
+            <TooltipProvider>
+              <Toaster />
+              <div className="flex flex-col min-h-screen w-full">
+                <Header />
+                <AppSidebar />
 
-              <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
-                <main className="flex-1 overflow-y-auto">
-                  <div className="container mx-auto max-w-7xl mt-10">
-                    {children}
-                  </div>
-                </main>
+                <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
+                  <main className="flex-1 overflow-y-auto">
+                    <div className="container mx-auto max-w-7xl mt-10">
+                      {children}
+                    </div>
+                  </main>
+                </div>
               </div>
-            </div>
-          </TooltipProvider>
+            </TooltipProvider>
+          </ReactFlowProvider>
         </QueryClientProvider>
       </SidebarProvider>
     </ThemeProvider>

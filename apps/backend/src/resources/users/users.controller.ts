@@ -37,11 +37,12 @@ export class UsersController {
     return await this.usersService.update(id, { email, name, role })
   }
 
-  @Get('/buscar-usuarios')
+  @Get('')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async findUsers(
     @Query('page') page: string = '1',
     @Query('perPage') perPage: string = '10',
+    @Query('orderBy') orderBy: 'asc' | 'desc' = 'desc',
     @Query('name') name?: string,
     @Query('role') role?: 'admin' | 'user',
   ) {
@@ -50,6 +51,7 @@ export class UsersController {
       perPage: Number(perPage),
       name,
       role,
+      orderBy,
     })
   }
 }

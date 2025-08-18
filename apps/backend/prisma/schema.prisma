@@ -32,3 +32,85 @@ model User {
 
   @@map("users")
 }
+
+model Approach {
+  id    String @id @default(uuid())
+  title String
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  axis Axis[]
+
+  @@map("approaches")
+}
+
+model Axis {
+  id    String @id @default(uuid())
+  title String
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  approachesId String   @map("approaches_id")
+  approache    Approach @relation(fields: [approachesId], references: [id], onDelete: Cascade)
+
+  question Question[]
+
+  @@map("axis")
+}
+
+model Question {
+  id        String    @id @default(uuid())
+  title     String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  axisId String @map("axis_id")
+  axis   Axis   @relation(fields: [axisId], references: [id], onDelete: Cascade)
+
+  transitionsFromHere Transition[] @relation("FromQuestion")
+
+  transitionToHere Transition? @relation("ToQuestion")
+
+  @@map("questions")
+}
+
+model Transition {
+  id             String  @id @default(uuid())
+  fromQuestionId String  @map("from_question_id")
+  answerId       String  @map("answer_id")
+  toQuestionId   String? @unique @map("to_question_id")
+
+  fromQuestion Question  @relation("FromQuestion", fields: [fromQuestionId], references: [id], onDelete: Cascade)
+  toQuestion   Question? @relation("ToQuestion", fields: [toQuestionId], references: [id], onDelete: Cascade)
+  answerValue  Answer    @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@unique([fromQuestionId, answerId])
+  @@map("transitions")
+}
+
+model Answer {
+  id         String       @id @default(uuid())
+  title      String
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime?    @updatedAt @map("updated_at")
+  steps      Step[]
+  transition Transition[]
+
+  @@map("answers")
+}
+
+model Step {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  order       Int
+  answerId    String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt @map("updated_at")
+
+  answer Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@map("steps")
+}
