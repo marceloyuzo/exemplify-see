@@ -1,6 +1,15 @@
+import { useLessonPlanQuestions } from '@/hooks/use-lesson-plan-questions'
 import { Card, CardContent, CardHeader } from '../ui/card'
 
-export default function LessonPlanSteps() {
+interface LessonPlanStepsProps {
+  axisId: string
+}
+
+export default function LessonPlanSteps({ axisId }: LessonPlanStepsProps) {
+  const { stepsByQuestion } = useLessonPlanQuestions(axisId)
+
+  console.log(stepsByQuestion)
+
   return (
     <Card>
       <CardHeader></CardHeader>

@@ -60,6 +60,14 @@ export class QuestionController {
     })
   }
 
+  @Get('/question-next')
+  @UseGuards(JwtAuthGuard)
+  async findNextQuestion(@Query('answerId') answerId: string) {
+    return await this.questionService.findNextQuestion({
+      answerId,
+    })
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async get(@Param('id') id: string) {

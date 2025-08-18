@@ -14,7 +14,7 @@ export default function LessonPlanContent({
   return (
     <TabsContent value={tabValue} className="grid grid-cols-3 gap-2">
       <LessonPlanForm axisId={axisId} />
-      <LessonPlanSteps />
+      <LessonPlanSteps axisId={axisId} />
     </TabsContent>
   )
 }

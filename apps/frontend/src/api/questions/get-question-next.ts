@@ -1,7 +1,7 @@
 import { api } from '@/lib/axios'
 
-interface GetQuestionRootParam {
-  axisId: string
+interface GetQuestionNextParam {
+  answerId: string | null
 }
 
 interface Steps {
@@ -21,18 +21,18 @@ interface NextQuestion {
   answerValue: AnswerValue
 }
 
-interface GetQuestionRootResponse {
+interface GetQuestionNextResponse {
   id: string
   title: string
   transitionsFromHere: NextQuestion[]
 }
 
-export async function getQuestionRoot({ axisId }: GetQuestionRootParam) {
-  const response = await api.get<GetQuestionRootResponse>(
-    '/question/question-root',
+export async function getQuestionNext({ answerId }: GetQuestionNextParam) {
+  const response = await api.get<GetQuestionNextResponse>(
+    '/question/question-next',
     {
       params: {
-        axisId,
+        answerId,
       },
       withCredentials: true,
     },

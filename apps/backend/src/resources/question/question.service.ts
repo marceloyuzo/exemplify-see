@@ -22,6 +22,10 @@ interface FindFirstQuestionProps {
   axisId: string
 }
 
+interface FindNextQuestionProps {
+  answerId: string
+}
+
 interface FindQuestionDetailProps {
   questionId: string
 }
@@ -208,6 +212,62 @@ export class QuestionService {
               select: {
                 id: true,
                 title: true,
+                steps: {
+                  select: {
+                    id: true,
+                    title: true,
+                    order: true,
+                  },
+                  orderBy: {
+                    order: 'asc',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return question
+  }
+
+  async findNextQuestion({ answerId }: FindNextQuestionProps) {
+    const isAnswerExists = await this.prisma.answer.findUnique({
+      where: {
+        id: answerId,
+      },
+    })
+
+    if (!isAnswerExists) {
+      throw new NotFoundException(
+        'Não existe uma resposta com esse identificador.',
+      )
+    }
+
+    const question = await this.prisma.question.findFirst({
+      where: {
+        transitionToHere: {
+          answerId,
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        transitionsFromHere: {
+          select: {
+            toQuestionId: true,
+            answerValue: {
+              select: {
+                id: true,
+                title: true,
+                steps: {
+                  select: {
+                    id: true,
+                    title: true,
+                    order: true,
+                  },
+                },
               },
             },
           },

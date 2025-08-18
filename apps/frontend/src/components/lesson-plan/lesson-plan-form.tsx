@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+// LessonPlanForm.tsx
+import { useLessonPlanQuestions } from '@/hooks/use-lesson-plan-questions'
 import { Card, CardContent, CardHeader } from '../ui/card'
-import { GetQuestionRoot } from '@/api/questions/get-question-root'
 import { Label } from '../ui/label'
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 
@@ -9,41 +9,83 @@ interface LessonPlanFormProps {
 }
 
 export default function LessonPlanForm({ axisId }: LessonPlanFormProps) {
-  // const { handleSubmit, control } = useForm<{ [key: string]: 'yes' | 'no' }>()
-  const { data: dataQuestionRoot } = useQuery({
-    queryKey: ['question-root', axisId],
-    queryFn: () =>
-      GetQuestionRoot({
-        axisId,
-      }),
-  })
+  const {
+    form,
+    currentQuestions,
+    isLoadingRoot,
+    isLoadingNext,
+    currentAnswers,
+    totalQuestions,
+    isCompleted,
+  } = useLessonPlanQuestions(axisId)
 
-  // const onSubmit = (values: { [key: string]: 'yes' | 'no' }) => {
-  //   console.log('Respostas:', values)
-  // }
+  const { setValue } = form
+
+  if (isLoadingRoot) {
+    return (
+      <Card className="col-span-2">
+        <CardContent>
+          <div className="flex items-center justify-center p-6">
+            Carregando pergunta...
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="col-span-2">
-      <CardHeader></CardHeader>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-500">
+            {totalQuestions} pergunta{totalQuestions !== 1 ? 's' : ''}
+          </span>
+          {isCompleted && (
+            <span className="text-sm text-green-600 font-semibold">
+              ✓ Completo
+            </span>
+          )}
+        </div>
+      </CardHeader>
       <CardContent>
-        <form>
-          <Label>{dataQuestionRoot?.title}</Label>
-          <RadioGroup className="flex gap-8 mt-2">
-            {dataQuestionRoot?.transitionsFromHere.map((nextQuestion) => (
-              <div
-                className="flex items-center gap-2"
-                key={nextQuestion.answerValue.id}
-              >
-                <RadioGroupItem
-                  value={nextQuestion.answerValue.id}
-                  id={`${nextQuestion.answerValue.id}`}
-                />
-                <Label htmlFor={`${nextQuestion.answerValue.id}`}>
-                  {nextQuestion.answerValue.title}
+        <form className="space-y-6">
+          {currentQuestions.map((question, index) => (
+            <div key={question.id} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">
+                  {index + 1}. {question.title}
                 </Label>
+                {isLoadingNext && index === currentQuestions.length - 1 && (
+                  <div className="text-xs text-gray-500">
+                    Carregando próxima pergunta...
+                  </div>
+                )}
               </div>
-            ))}
-          </RadioGroup>
+
+              <RadioGroup
+                className="flex gap-8 mt-2"
+                value={currentAnswers[question.id] || ''}
+                onValueChange={(value) => setValue(question.id, value)}
+              >
+                {question.transitionsFromHere.map((transition) => (
+                  <div
+                    className="flex items-center gap-2"
+                    key={transition.answerValue.id}
+                  >
+                    <RadioGroupItem
+                      value={transition.answerValue.id}
+                      id={`${question.id}-${transition.answerValue.id}`}
+                    />
+                    <Label
+                      htmlFor={`${question.id}-${transition.answerValue.id}`}
+                    >
+                      {transition.answerValue.title}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          ))}
         </form>
       </CardContent>
     </Card>

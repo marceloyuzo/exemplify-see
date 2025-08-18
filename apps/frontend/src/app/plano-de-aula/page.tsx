@@ -2,7 +2,7 @@
 
 import { getAxisList } from '@/api/axis/get-axis-list'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
-import LessonPlanForm from '@/components/lesson-plan/lesson-plan-content'
+import LessonPlanContent from '@/components/lesson-plan/lesson-plan-content'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useQuery } from '@tanstack/react-query'
@@ -57,8 +57,8 @@ export default function LessonPlanPage() {
       <h1>Plano de Aula</h1>
 
       {isFetching && <p>Atualizando dados...</p>}
-      <Tabs defaultValue="tab-1" className="items-center">
-        <TabsList className="bg-card h-auto -space-x-px p-0 shadow-xs rtl:space-x-reverse">
+      <Tabs defaultValue="tab-1" className="w-full">
+        <TabsList className="bg-card h-auto -space-x-px p-0 shadow-xs rtl:space-x-reverse mx-auto">
           {axisList?.map((axis, index) => (
             <TabsTrigger
               key={axis.id}
@@ -70,7 +70,7 @@ export default function LessonPlanPage() {
           ))}
         </TabsList>
         {axisList?.map((axis, index) => (
-          <LessonPlanForm
+          <LessonPlanContent
             axisId={axis.id}
             tabValue={`tab-${index + 1}`}
             key={axis.id}
