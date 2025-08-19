@@ -56,21 +56,24 @@ export default function LessonPlanPage() {
         <Breadcrumbs items={breadcrumbItems} />
       </div>
 
-      <LessonPlanMenu />
-
       {isFetching && <p>Atualizando dados...</p>}
       <Tabs defaultValue="tab-1" className="w-full h-[calc(100vh-280px)]">
-        <TabsList className="bg-card h-auto -space-x-px p-0 shadow-xs rtl:space-x-reverse mx-auto">
-          {axisList?.map((axis, index) => (
-            <TabsTrigger
-              key={axis.id}
-              value={`tab-${index + 1}`}
-              className="data-[state=active]:bg-muted data-[state=active]:after:bg-primary relative overflow-hidden rounded-none border px-8 py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e"
-            >
-              {axis.title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="flex items-center">
+          <TabsList className="bg-card h-fit -space-x-px p-0 shadow-xs rtl:space-x-reverse mx-auto">
+            {axisList?.map((axis, index) => (
+              <TabsTrigger
+                key={axis.id}
+                value={`tab-${index + 1}`}
+                className="data-[state=active]:bg-muted data-[state=active]:after:bg-primary relative overflow-hidden rounded-none border px-8 py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e"
+              >
+                {axis.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <LessonPlanMenu />
+        </div>
+
         {axisList?.map((axis, index) => (
           <LessonPlanContent
             axisId={axis.id}

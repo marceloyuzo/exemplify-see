@@ -15,7 +15,7 @@ interface VerticalTimelineProps {
 
 export default function VerticalTimeline({ steps }: VerticalTimelineProps) {
   return (
-    <Timeline defaultValue={3}>
+    <Timeline>
       {steps.map((step) => (
         <TimelineItem key={step.id} step={step.order}>
           <TimelineHeader>
