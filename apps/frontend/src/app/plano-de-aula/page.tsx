@@ -9,6 +9,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useQuery } from '@tanstack/react-query'
 import { HomeIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useLessonPlanManager } from '@/hooks/use-lesson-plan-manager'
+import { useLessonPlanQuestions } from '@/hooks/use-lesson-plan-questions'
 
 export default function LessonPlanPage() {
   const router = useRouter()
@@ -19,12 +21,40 @@ export default function LessonPlanPage() {
     isError,
     isFetching,
   } = useQuery({
-    queryKey: ['axisList', '75b68e1f-14c9-46b3-b0d9-cc9ddfaaed0f'],
+    queryKey: ['axisList', 'ce2fd7bd-a7bb-4438-86c3-98f4dcb0e105'],
     queryFn: () =>
       getAxisList({
-        approachId: '75b68e1f-14c9-46b3-b0d9-cc9ddfaaed0f',
+        approachId: 'ce2fd7bd-a7bb-4438-86c3-98f4dcb0e105',
       }),
   })
+
+  // Criar formulários individuais para cada eixo
+  // Nota: Isso deve ser feito no nível do componente, não dentro de loops condicionais
+  const axisForm1 = useLessonPlanQuestions(axisList?.[0]?.id || '')
+  const axisForm2 = useLessonPlanQuestions(axisList?.[1]?.id || '')
+  const axisForm3 = useLessonPlanQuestions(axisList?.[2]?.id || '')
+  const axisForm4 = useLessonPlanQuestions(axisList?.[3]?.id || '')
+  const axisForm5 = useLessonPlanQuestions(axisList?.[4]?.id || '')
+
+  // Criar objeto com todos os formulários
+  const axisForms: Record<
+    string,
+    ReturnType<typeof useLessonPlanQuestions>
+  > = {}
+  if (axisList) {
+    if (axisList[0]) axisForms[axisList[0].id] = axisForm1
+    if (axisList[1]) axisForms[axisList[1].id] = axisForm2
+    if (axisList[2]) axisForms[axisList[2].id] = axisForm3
+    if (axisList[3]) axisForms[axisList[3].id] = axisForm4
+    if (axisList[4]) axisForms[axisList[4].id] = axisForm5
+  }
+
+  // Usar o hook manager para gerenciar todos os formulários
+  const lessonPlanManager = useLessonPlanManager(
+    axisList?.map((axis) => axis.id) || [],
+    'ce2fd7bd-a7bb-4438-86c3-98f4dcb0e105',
+    axisForms,
+  )
 
   const breadcrumbItems = [
     {
@@ -56,7 +86,18 @@ export default function LessonPlanPage() {
         <Breadcrumbs items={breadcrumbItems} />
       </div>
 
-      <LessonPlanMenu />
+      <LessonPlanMenu
+        title={lessonPlanManager.title}
+        description={lessonPlanManager.description}
+        setTitle={lessonPlanManager.setTitle}
+        setDescription={lessonPlanManager.setDescription}
+        onSave={lessonPlanManager.saveLessonPlan}
+        onReset={lessonPlanManager.resetAllForms}
+        isSaving={lessonPlanManager.isSaving}
+        isAnyFormCompleted={lessonPlanManager.isAnyFormCompleted}
+        totalCompletedForms={lessonPlanManager.totalCompletedForms}
+        totalForms={lessonPlanManager.totalForms}
+      />
 
       {isFetching && <p>Atualizando dados...</p>}
       <Tabs defaultValue="tab-1" className="w-full h-[calc(100vh-280px)]">
@@ -76,6 +117,7 @@ export default function LessonPlanPage() {
             axisId={axis.id}
             tabValue={`tab-${index + 1}`}
             key={axis.id}
+            lessonPlanData={axisForms[axis.id]}
           />
         ))}
       </Tabs>

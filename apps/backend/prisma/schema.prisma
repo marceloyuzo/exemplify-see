@@ -30,6 +30,8 @@ model User {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime? @updatedAt @map("updated_at")
 
+  lessonPlans LessonPlan[]
+
   @@map("users")
 }
 
@@ -40,7 +42,8 @@ model Approach {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
-  axis Axis[]
+  axis        Axis[]
+  lessonPlans LessonPlan[]
 
   @@map("approaches")
 }
@@ -55,7 +58,8 @@ model Axis {
   approachesId String   @map("approaches_id")
   approache    Approach @relation(fields: [approachesId], references: [id], onDelete: Cascade)
 
-  question Question[]
+  question       Question[]
+  lessonPlanAxes LessonPlanAxis[]
 
   @@map("axis")
 }
@@ -69,9 +73,9 @@ model Question {
   axisId String @map("axis_id")
   axis   Axis   @relation(fields: [axisId], references: [id], onDelete: Cascade)
 
-  transitionsFromHere Transition[] @relation("FromQuestion")
-
-  transitionToHere Transition? @relation("ToQuestion")
+  transitionsFromHere Transition[]       @relation("FromQuestion")
+  transitionToHere    Transition?        @relation("ToQuestion")
+  lessonPlanAnswers   LessonPlanAnswer[]
 
   @@map("questions")
 }
@@ -91,12 +95,13 @@ model Transition {
 }
 
 model Answer {
-  id         String       @id @default(uuid())
-  title      String
-  createdAt  DateTime     @default(now()) @map("created_at")
-  updatedAt  DateTime?    @updatedAt @map("updated_at")
-  steps      Step[]
-  transition Transition[]
+  id                String             @id @default(uuid())
+  title             String
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime?          @updatedAt @map("updated_at")
+  steps             Step[]
+  transition        Transition[]
+  lessonPlanAnswers LessonPlanAnswer[]
 
   @@map("answers")
 }
@@ -113,4 +118,66 @@ model Step {
   answer Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
 
   @@map("steps")
+}
+
+model LessonPlan {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  userId      String    @map("user_id")
+  approachId  String    @map("approach_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt @map("updated_at")
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approach Approach         @relation(fields: [approachId], references: [id], onDelete: Cascade)
+  axes     LessonPlanAxis[]
+
+  @@map("lesson_plans")
+}
+
+model LessonPlanAxis {
+  id           String             @id @default(uuid())
+  lessonPlanId String             @map("lesson_plan_id")
+  axisId       String             @map("axis_id")
+  answers      LessonPlanAnswer[]
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime?          @updatedAt @map("updated_at")
+
+  lessonPlan LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: Cascade)
+  axis       Axis       @relation(fields: [axisId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonPlanId, axisId])
+  @@map("lesson_plan_axes")
+}
+
+model LessonPlanAnswer {
+  id               String           @id @default(uuid())
+  lessonPlanAxisId String           @map("lesson_plan_axis_id")
+  questionId       String           @map("question_id")
+  answerId         String           @map("answer_id")
+  steps            LessonPlanStep[]
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime?        @updatedAt @map("updated_at")
+
+  lessonPlanAxis LessonPlanAxis @relation(fields: [lessonPlanAxisId], references: [id], onDelete: Cascade)
+  question       Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer         Answer         @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonPlanAxisId, questionId])
+  @@map("lesson_plan_answers")
+}
+
+model LessonPlanStep {
+  id                 String    @id @default(uuid())
+  lessonPlanAnswerId String    @map("lesson_plan_answer_id")
+  title              String
+  description        String
+  order              Int
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime? @updatedAt @map("updated_at")
+
+  lessonPlanAnswer LessonPlanAnswer @relation(fields: [lessonPlanAnswerId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_plan_steps")
 }

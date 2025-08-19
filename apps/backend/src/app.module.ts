@@ -7,6 +7,7 @@ import { AuthModule } from './resources/auth/auth.module'
 import { ApproachModule } from './resources/approach/approach.module'
 import { AxisModule } from './resources/axis/axis.module'
 import { QuestionModule } from './resources/question/question.module'
+import { LessonPlanModule } from './resources/lesson-plan/lesson-plan.module'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { QuestionModule } from './resources/question/question.module'
     ApproachModule,
     AxisModule,
     QuestionModule,
+    LessonPlanModule,
   ],
   controllers: [AppController],
   providers: [],
