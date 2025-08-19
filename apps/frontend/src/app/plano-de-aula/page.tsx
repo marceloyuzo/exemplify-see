@@ -3,6 +3,7 @@
 import { getAxisList } from '@/api/axis/get-axis-list'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
 import LessonPlanContent from '@/components/lesson-plan/lesson-plan-content'
+import LessonPlanMenu from '@/components/lesson-plan/lesson-plan-menu'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useQuery } from '@tanstack/react-query'
@@ -54,10 +55,11 @@ export default function LessonPlanPage() {
         </Button>
         <Breadcrumbs items={breadcrumbItems} />
       </div>
-      <h1>Plano de Aula</h1>
+
+      <LessonPlanMenu />
 
       {isFetching && <p>Atualizando dados...</p>}
-      <Tabs defaultValue="tab-1" className="w-full">
+      <Tabs defaultValue="tab-1" className="w-full h-[calc(100vh-280px)]">
         <TabsList className="bg-card h-auto -space-x-px p-0 shadow-xs rtl:space-x-reverse mx-auto">
           {axisList?.map((axis, index) => (
             <TabsTrigger

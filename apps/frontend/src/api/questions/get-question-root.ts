@@ -4,13 +4,14 @@ interface GetQuestionRootParam {
   axisId: string
 }
 
-interface Steps {
+export interface Steps {
   id: string
   title: string
+  description: string
   order: number
 }
 
-interface AnswerValue {
+export interface AnswerValue {
   id: string
   title: string
   steps: Steps[]

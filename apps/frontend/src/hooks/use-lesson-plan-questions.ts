@@ -1,15 +1,10 @@
 // hooks/useLessonPlanQuestions.ts
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import { getQuestionRoot } from '@/api/questions/get-question-root'
 import { getQuestionNext } from '@/api/questions/get-question-next'
-
-export interface Step {
-  id: string
-  title: string
-  order: number
-}
+import { Step } from '@/components/question/question-dialog'
 
 export interface Question {
   id: string
@@ -25,7 +20,7 @@ export interface Question {
 }
 
 export interface FormData {
-  [questionId: string]: string // answerId selecionado
+  [questionId: string]: string
 }
 
 export interface UseLessonPlanQuestionsReturn {
@@ -37,8 +32,7 @@ export interface UseLessonPlanQuestionsReturn {
   questionsHistory: string[]
 
   // Steps data
-  // allSteps: Step[]
-  stepsByQuestion: Record<string, Step[]>
+  currentSteps: Step[]
 
   // Loading states
   isLoadingRoot: boolean
@@ -57,7 +51,7 @@ export interface UseLessonPlanQuestionsReturn {
   getQuestionByIndex: (index: number) => Question | undefined
   isQuestionAnswered: (questionId: string) => boolean
   getSelectedAnswerText: (questionId: string) => string | undefined
-  getStepsForQuestion: (questionId: string) => Step[]
+  getStepsForAnswer: (questionId: string, answerId: string) => Step[]
 }
 
 export function useLessonPlanQuestions(
@@ -65,10 +59,7 @@ export function useLessonPlanQuestions(
 ): UseLessonPlanQuestionsReturn {
   const [currentQuestions, setCurrentQuestions] = useState<Question[]>([])
   const [questionsHistory, setQuestionsHistory] = useState<string[]>([])
-  // const [allSteps, setAllSteps] = useState<Step[]>([])
-  const [stepsByQuestion, setStepsByQuestion] = useState<
-    Record<string, Step[]>
-  >({})
+  const [currentSteps, setCurrentSteps] = useState<Step[]>([])
 
   const form = useForm<FormData>({
     defaultValues: {},
@@ -76,14 +67,12 @@ export function useLessonPlanQuestions(
 
   const { watch, setValue, reset, getValues } = form
 
-  // Query para buscar a pergunta raiz
   const { data: dataQuestionRoot, isLoading: isLoadingRoot } = useQuery({
     queryKey: ['question-root', axisId],
     queryFn: () => getQuestionRoot({ axisId }),
     enabled: !!axisId,
   })
 
-  // Inicializa com a pergunta raiz
   useEffect(() => {
     if (dataQuestionRoot) {
       setCurrentQuestions([dataQuestionRoot])
@@ -91,14 +80,12 @@ export function useLessonPlanQuestions(
     }
   }, [dataQuestionRoot])
 
-  // Query para buscar próxima pergunta baseada na resposta
   const watchedAnswers = watch()
   const lastAnsweredQuestionId = questionsHistory[questionsHistory.length - 1]
   const lastSelectedAnswerId = lastAnsweredQuestionId
     ? watchedAnswers[lastAnsweredQuestionId]
     : null
 
-  // Verifica se a última resposta selecionada tem uma próxima pergunta
   const shouldFetchNext = () => {
     if (!lastSelectedAnswerId || !lastAnsweredQuestionId) return false
 
@@ -128,34 +115,28 @@ export function useLessonPlanQuestions(
     }
   }, [nextQuestion, currentQuestions])
 
-  // Função para consolidar todos os steps das perguntas respondidas
-  // const updateAllSteps = () => {
-  //   const currentAnswers = getValues()
-  //   const allStepsArray: Step[] = []
+  // Função helper para extrair steps de uma resposta
+  const getStepsForAnswer = useCallback(
+    (questionId: string, answerId: string): Step[] => {
+      const question = currentQuestions.find((q) => q.id === questionId)
+      const selectedTransition = question?.transitionsFromHere.find(
+        (t) => t.answerValue.id === answerId,
+      )
 
-  //   // Processa as perguntas na ordem do histórico
-  //   questionsHistory.forEach((questionId) => {
-  //     if (stepsByQuestion[questionId]) {
-  //       allStepsArray.push(...stepsByQuestion[questionId])
-  //     }
-  //   })
+      if (
+        selectedTransition?.answerValue?.steps &&
+        selectedTransition.answerValue.steps.length > 0
+      ) {
+        // Ordena os steps por order
+        return [...selectedTransition.answerValue.steps].sort(
+          (a, b) => a.order - b.order,
+        )
+      }
 
-  //   // Remove duplicatas baseado no ID e ordena
-  //   const uniqueSteps = allStepsArray
-  //     .filter(
-  //       (step, index, array) =>
-  //         array.findIndex((s) => s.id === step.id) === index,
-  //     )
-  //     .sort((a, b) => a.order - b.order)
-
-  //   setAllSteps(uniqueSteps)
-  //   console.log('📊 Steps consolidados atualizados:', uniqueSteps)
-  // }
-
-  // Atualiza os steps consolidados sempre que stepsByQuestion mudar
-  // useEffect(() => {
-  //   updateAllSteps()
-  // }, [stepsByQuestion, questionsHistory])
+      return []
+    },
+    [currentQuestions],
+  )
 
   // Monitora mudanças nas respostas
   useEffect(() => {
@@ -164,34 +145,11 @@ export function useLessonPlanQuestions(
         const questionId = name
         const answerId = values[name]
 
-        console.log('🔄 Resposta alterada:', { questionId, answerId })
+        // Extrai os steps da resposta selecionada usando a função helper
+        const stepsFromAnswer = getStepsForAnswer(questionId, answerId)
 
-        // Encontra a transição correspondente
-        const currentQuestion = currentQuestions.find(
-          (q) => q.id === questionId,
-        )
-        const selectedTransition = currentQuestion?.transitionsFromHere.find(
-          (t) => t.answerValue.id === answerId,
-        )
-
-        console.log('📋 Transição encontrada:', selectedTransition)
-
-        // Atualiza os steps para esta pergunta
-        if (selectedTransition?.answerValue.steps) {
-          const steps = [...selectedTransition.answerValue.steps].sort(
-            (a, b) => a.order - b.order,
-          )
-
-          setStepsByQuestion((prev) => ({
-            ...prev,
-            [questionId]: steps,
-          }))
-
-          // console.log('📝 Steps atualizados para pergunta:', {
-          //   questionId,
-          //   steps,
-          // })
-        }
+        // Atualiza os steps atuais
+        setCurrentSteps(stepsFromAnswer)
 
         // Encontra o índice da pergunta atual no histórico
         const currentIndex = questionsHistory.indexOf(questionId)
@@ -207,9 +165,6 @@ export function useLessonPlanQuestions(
           questionsToKeep = [...questionsHistory, questionId]
         }
 
-        // console.log('📝 Histórico anterior:', questionsHistory)
-        // console.log('✅ Perguntas a manter:', questionsToKeep)
-
         // Atualiza o histórico
         setQuestionsHistory(questionsToKeep)
 
@@ -219,10 +174,7 @@ export function useLessonPlanQuestions(
             (q) =>
               questionsToKeep.includes(q.id) || q.id === dataQuestionRoot?.id,
           )
-          // console.log(
-          //   '🏠 Perguntas atuais após filtragem:',
-          //   filtered.map((q) => ({ id: q.id, title: q.title })),
-          // )
+
           return filtered
         })
 
@@ -233,39 +185,29 @@ export function useLessonPlanQuestions(
             !questionsToKeep.includes(qId) && qId !== dataQuestionRoot?.id,
         )
 
-        // console.log('🗑️ Perguntas a remover valores:', questionsToRemove)
-
         questionsToRemove.forEach((qId) => {
           setValue(qId, '')
-          // Remove os steps das perguntas removidas
-          setStepsByQuestion((prev) => {
-            const updated = { ...prev }
-            delete updated[qId]
-            return updated
-          })
         })
-
-        // Atualiza o array consolidado de todos os steps
-        // updateAllSteps()
-
-        // Log do resultado final
-        // console.log(
-        //   '🎯 Próxima pergunta será buscada?',
-        //   !!selectedTransition?.toQuestionId,
-        // )
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [watch, questionsHistory, currentQuestions, setValue, dataQuestionRoot])
+  }, [
+    watch,
+    questionsHistory,
+    currentQuestions,
+    setValue,
+    dataQuestionRoot,
+    currentSteps,
+    getStepsForAnswer,
+  ])
 
   // Actions
   const resetForm = () => {
     reset()
     setCurrentQuestions(dataQuestionRoot ? [dataQuestionRoot] : [])
     setQuestionsHistory([])
-    // setAllSteps([])
-    setStepsByQuestion({})
+    setCurrentSteps([])
   }
 
   const goToPreviousQuestion = () => {
@@ -284,12 +226,8 @@ export function useLessonPlanQuestions(
         ),
       )
 
-      // Remove os steps da pergunta removida
-      setStepsByQuestion((prev) => {
-        const updated = { ...prev }
-        delete updated[previousQuestionId]
-        return updated
-      })
+      // Limpa os steps ao voltar (eles serão recalculados quando uma nova resposta for selecionada)
+      setCurrentSteps([])
     }
   }
 
@@ -323,10 +261,6 @@ export function useLessonPlanQuestions(
     return selectedTransition?.answerValue.title
   }
 
-  const getStepsForQuestion = (questionId: string): Step[] => {
-    return stepsByQuestion[questionId] || []
-  }
-
   return {
     // Form control
     form,
@@ -336,8 +270,7 @@ export function useLessonPlanQuestions(
     questionsHistory,
 
     // Steps data
-    // allSteps,
-    stepsByQuestion,
+    currentSteps,
 
     // Loading states
     isLoadingRoot,
@@ -356,6 +289,6 @@ export function useLessonPlanQuestions(
     getQuestionByIndex,
     isQuestionAnswered,
     getSelectedAnswerText,
-    getStepsForQuestion,
+    getStepsForAnswer,
   }
 }

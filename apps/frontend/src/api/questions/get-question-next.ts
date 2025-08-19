@@ -1,19 +1,8 @@
 import { api } from '@/lib/axios'
+import { AnswerValue } from './get-question-root'
 
 interface GetQuestionNextParam {
   answerId: string | null
-}
-
-interface Steps {
-  id: string
-  title: string
-  order: number
-}
-
-interface AnswerValue {
-  id: string
-  title: string
-  steps: Steps[]
 }
 
 interface NextQuestion {

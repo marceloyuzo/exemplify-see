@@ -216,6 +216,7 @@ export class QuestionService {
                   select: {
                     id: true,
                     title: true,
+                    description: true,
                     order: true,
                   },
                   orderBy: {
@@ -265,6 +266,7 @@ export class QuestionService {
                   select: {
                     id: true,
                     title: true,
+                    description: true,
                     order: true,
                   },
                 },

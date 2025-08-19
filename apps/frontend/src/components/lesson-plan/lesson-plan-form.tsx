@@ -1,14 +1,16 @@
-// LessonPlanForm.tsx
-import { useLessonPlanQuestions } from '@/hooks/use-lesson-plan-questions'
+import { UseLessonPlanQuestionsReturn } from '@/hooks/use-lesson-plan-questions'
 import { Card, CardContent, CardHeader } from '../ui/card'
 import { Label } from '../ui/label'
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 
 interface LessonPlanFormProps {
   axisId: string
+  lessonPlanData: UseLessonPlanQuestionsReturn
 }
 
-export default function LessonPlanForm({ axisId }: LessonPlanFormProps) {
+export default function LessonPlanForm({
+  lessonPlanData,
+}: LessonPlanFormProps) {
   const {
     form,
     currentQuestions,
@@ -17,13 +19,13 @@ export default function LessonPlanForm({ axisId }: LessonPlanFormProps) {
     currentAnswers,
     totalQuestions,
     isCompleted,
-  } = useLessonPlanQuestions(axisId)
+  } = lessonPlanData
 
   const { setValue } = form
 
   if (isLoadingRoot) {
     return (
-      <Card className="col-span-2">
+      <Card className="col-span-3">
         <CardContent>
           <div className="flex items-center justify-center p-6">
             Carregando pergunta...
@@ -34,14 +36,14 @@ export default function LessonPlanForm({ axisId }: LessonPlanFormProps) {
   }
 
   return (
-    <Card className="col-span-2">
+    <Card className="col-span-3">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-secondary-foreground">
             {totalQuestions} pergunta{totalQuestions !== 1 ? 's' : ''}
           </span>
           {isCompleted && (
-            <span className="text-sm text-green-600 font-semibold">
+            <span className="text-sm text-primary font-semibold">
               ✓ Completo
             </span>
           )}
