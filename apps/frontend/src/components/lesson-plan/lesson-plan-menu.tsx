@@ -1,31 +1,21 @@
 import { Button } from '../ui/button'
 import LessonPlanSaveDialog from './lesson-plan-dialogs/lesson-plan-save-dialog'
+import { useLessonPlanContext } from '@/contexts/lesson-plan-context'
 
-interface LessonPlanMenuProps {
-  title: string
-  description: string
-  setTitle: (title: string) => void
-  setDescription: (description: string) => void
-  onSave: () => Promise<void>
-  onReset: () => void
-  isSaving: boolean
-  isAnyFormCompleted: boolean
-  totalCompletedForms: number
-  totalForms: number
-}
+export default function LessonPlanMenu() {
+  const {
+    title,
+    description,
+    setTitle,
+    setDescription,
+    saveLessonPlan,
+    resetAllForms,
+    isSaving,
+    isAnyFormCompleted,
+    totalCompletedForms,
+    totalForms,
+  } = useLessonPlanContext()
 
-export default function LessonPlanMenu({
-  title,
-  description,
-  setTitle,
-  setDescription,
-  onSave,
-  onReset,
-  isSaving,
-  isAnyFormCompleted,
-  totalCompletedForms,
-  totalForms,
-}: LessonPlanMenuProps) {
   return (
     <div className="my-4 flex gap-4">
       <LessonPlanSaveDialog
@@ -33,18 +23,14 @@ export default function LessonPlanMenu({
         description={description}
         setTitle={setTitle}
         setDescription={setDescription}
-        onSave={onSave}
+        onSave={saveLessonPlan}
         isSaving={isSaving}
         isAnyFormCompleted={isAnyFormCompleted}
         totalCompletedForms={totalCompletedForms}
         totalForms={totalForms}
       />
 
-      <Button 
-        variant={'outline'} 
-        onClick={onReset}
-        disabled={isSaving}
-      >
+      <Button variant={'outline'} onClick={resetAllForms} disabled={isSaving}>
         Limpar Plano
       </Button>
 

@@ -1,10 +1,10 @@
-import { UseLessonPlanQuestionsReturn } from '@/hooks/use-lesson-plan-questions'
 import { Card, CardContent, CardHeader } from '../ui/card'
 import VerticalTimeline from '../ui/timeline-vertical'
+import { AxisData } from '@/contexts/lesson-plan-context'
 
 interface LessonPlanStepsProps {
   axisId: string
-  lessonPlanData: UseLessonPlanQuestionsReturn
+  lessonPlanData: AxisData
 }
 
 export default function LessonPlanSteps({

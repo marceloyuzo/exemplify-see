@@ -51,10 +51,7 @@ export default function LessonPlanSaveDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          disabled={!isAnyFormCompleted}
-        >
+        <Button variant="outline" disabled={!isAnyFormCompleted}>
           Salvar Plano ({totalCompletedForms}/{totalForms})
         </Button>
       </DialogTrigger>
@@ -88,10 +85,14 @@ export default function LessonPlanSaveDialog({
             />
           </div>
           <div className="text-sm text-muted-foreground">
-            <p>Eixos completos: {totalCompletedForms}/{totalForms}</p>
+            <p>
+              Eixos completos: {totalCompletedForms}/{totalForms}
+            </p>
             {totalCompletedForms > 0 && (
               <p className="text-green-600">
-                ✓ Seu plano de aula será salvo com {totalCompletedForms} eixo{totalCompletedForms !== 1 ? 's' : ''} completo{totalCompletedForms !== 1 ? 's' : ''}
+                ✓ Seu plano de aula será salvo com {totalCompletedForms} eixo
+                {totalCompletedForms !== 1 ? 's' : ''} completo
+                {totalCompletedForms !== 1 ? 's' : ''}
               </p>
             )}
           </div>
@@ -102,10 +103,7 @@ export default function LessonPlanSaveDialog({
               Cancelar
             </Button>
           </DialogClose>
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving || !title.trim()}
-          >
+          <Button onClick={handleSave} disabled={isSaving || !title.trim()}>
             {isSaving ? 'Salvando...' : 'Salvar Plano'}
           </Button>
         </DialogFooter>

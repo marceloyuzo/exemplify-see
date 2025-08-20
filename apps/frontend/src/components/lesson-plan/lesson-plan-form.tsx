@@ -1,18 +1,20 @@
-import { UseLessonPlanQuestionsReturn } from '@/hooks/use-lesson-plan-questions'
 import { Card, CardContent, CardHeader } from '../ui/card'
 import { Label } from '../ui/label'
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
+import { useLessonPlanContext, AxisData } from '@/contexts/lesson-plan-context'
 
 interface LessonPlanFormProps {
   axisId: string
-  lessonPlanData: UseLessonPlanQuestionsReturn
+  lessonPlanData: AxisData
 }
 
 export default function LessonPlanForm({
   lessonPlanData,
 }: LessonPlanFormProps) {
+  const { form } = useLessonPlanContext()
+  const { setValue } = form
+
   const {
-    form,
     currentQuestions,
     isLoadingRoot,
     isLoadingNext,
@@ -20,8 +22,6 @@ export default function LessonPlanForm({
     totalQuestions,
     isCompleted,
   } = lessonPlanData
-
-  const { setValue } = form
 
   if (isLoadingRoot) {
     return (
