@@ -1,8 +1,12 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
 import { Button } from '../ui/button'
 import LessonPlanSaveDialog from './lesson-plan-dialogs/lesson-plan-save-dialog'
 import { useLessonPlanContext } from '@/contexts/lesson-plan-context'
 
 export default function LessonPlanMenu() {
+  const router = useRouter()
   const {
     title,
     description,
@@ -34,8 +38,11 @@ export default function LessonPlanMenu() {
         Limpar Plano
       </Button>
 
-      <Button variant={'outline'} disabled>
-        Carregar Plano
+      <Button
+        variant={'outline'}
+        onClick={() => router.push('/repositorio/planos-de-aula')}
+      >
+        Repositório de Planos
       </Button>
 
       <Button variant={'outline'} disabled>

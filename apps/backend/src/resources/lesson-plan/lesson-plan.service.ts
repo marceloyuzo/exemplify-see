@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
 import { PrismaService } from 'src/database/services/prisma.service'
+import { Prisma } from 'generated/prisma'
+
+interface GetHighlightsLessonPlansProps {
+  userId: string
+  myRepository: boolean
+}
 
 @Injectable()
 export class LessonPlanService {
@@ -60,52 +66,30 @@ export class LessonPlanService {
     })
   }
 
-  async getLessonPlansByUser(userId: string) {
-    return await this.prisma.lessonPlan.findMany({
-      where: { userId },
-      include: {
-        approach: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        axes: {
-          include: {
-            axis: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-            answers: {
-              include: {
-                question: {
-                  select: {
-                    id: true,
-                    title: true,
-                  },
-                },
-                answer: {
-                  select: {
-                    id: true,
-                    title: true,
-                  },
-                },
-                steps: {
-                  orderBy: {
-                    order: 'asc',
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+  async getHighlightsLessonPlans({ userId, myRepository }: GetHighlightsLessonPlansProps) {
+    const where: Prisma.LessonPlanWhereInput = {}
+
+    if (myRepository) {
+      where.userId = { contains: userId, mode: 'insensitive' }
+    } else {
+      where.NOT = { userId: { equals: userId } }
+    }
+
+    const lessonsPlans = await this.prisma.lessonPlan.findMany({
+      where,
+      take: 8,
       orderBy: {
         createdAt: 'desc',
       },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        createdAt: true,
+      },
     })
+
+    return lessonsPlans
   }
 
   async getLessonPlanById(id: string, userId: string) {
