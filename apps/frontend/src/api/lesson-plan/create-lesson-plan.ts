@@ -20,6 +20,11 @@ export interface LessonPlanAxis {
 export interface CreateLessonPlanProps {
   title: string
   description?: string
+  subjectId?: string
+  topicId?: string
+  complexity?: string
+  example?: string
+  isPublic: boolean
   approachId: string
   axes: LessonPlanAxis[]
 }
@@ -29,6 +34,11 @@ export async function createLessonPlan({
   description,
   approachId,
   axes,
+  isPublic,
+  complexity,
+  example,
+  subjectId,
+  topicId,
 }: CreateLessonPlanProps) {
   const response = await api.post(
     '/lesson-plan',
@@ -37,6 +47,11 @@ export async function createLessonPlan({
       description,
       approachId,
       axes,
+      isPublic,
+      complexity,
+      example,
+      subjectId,
+      topicId,
     },
     {
       withCredentials: true,

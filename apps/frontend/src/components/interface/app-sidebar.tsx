@@ -23,7 +23,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Folders,
       items: [
         { title: 'Exemplos', url: '#' },
-        { title: 'Planos de Aula', url: '#' },
+        { title: 'Planos de Aula', url: '/repositorio/planos-de-aula' },
       ],
     },
     ...(isAdmin

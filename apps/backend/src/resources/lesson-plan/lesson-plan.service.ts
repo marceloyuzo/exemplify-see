@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
 import { PrismaService } from 'src/database/services/prisma.service'
 import { Prisma } from 'generated/prisma'
@@ -6,6 +10,19 @@ import { Prisma } from 'generated/prisma'
 interface GetHighlightsLessonPlansProps {
   userId: string
   myRepository: boolean
+}
+
+interface FindManyLessonPlanProps {
+  userId: string
+  page: number
+  perPage: number
+  orderBy: string
+  myLessons?: boolean
+  lessonPlanName?: string
+  subjectId?: string
+  topicId?: string
+  complexity?: 'beginner' | 'intermediate'
+  example?: 'correct' | 'erroneous'
 }
 
 @Injectable()
@@ -16,7 +33,17 @@ export class LessonPlanService {
     userId: string,
     createLessonPlanDto: CreateLessonPlanDto,
   ) {
-    const { title, description, approachId, axes } = createLessonPlanDto
+    const {
+      title,
+      description,
+      approachId,
+      axes,
+      isPublic,
+      complexity,
+      example,
+      subjectId,
+      topicId,
+    } = createLessonPlanDto
 
     return await this.prisma.$transaction(async (prisma) => {
       // Criar o plano de aula principal
@@ -26,6 +53,11 @@ export class LessonPlanService {
           description,
           userId,
           approachId,
+          isPublic,
+          complexity,
+          example,
+          subjectId,
+          topicId,
         },
       })
 
@@ -66,7 +98,10 @@ export class LessonPlanService {
     })
   }
 
-  async getHighlightsLessonPlans({ userId, myRepository }: GetHighlightsLessonPlansProps) {
+  async getHighlightsLessonPlans({
+    userId,
+    myRepository,
+  }: GetHighlightsLessonPlansProps) {
     const where: Prisma.LessonPlanWhereInput = {}
 
     if (myRepository) {
@@ -86,6 +121,13 @@ export class LessonPlanService {
         title: true,
         description: true,
         createdAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            photoURL: true,
+          },
+        },
       },
     })
 
@@ -93,47 +135,146 @@ export class LessonPlanService {
   }
 
   async getLessonPlanById(id: string, userId: string) {
-    return await this.prisma.lessonPlan.findFirst({
-      where: { id, userId },
-      include: {
-        approach: {
+    const lessonPlan = await this.prisma.lessonPlan.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        complexity: true,
+        example: true,
+        isPublic: true,
+        approachId: true,
+        createdAt: true,
+        updatedAt: true,
+        axes: true,
+        subject: {
           select: {
             id: true,
             title: true,
           },
         },
-        axes: {
-          include: {
-            axis: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-            answers: {
-              include: {
-                question: {
-                  select: {
-                    id: true,
-                    title: true,
-                  },
-                },
-                answer: {
-                  select: {
-                    id: true,
-                    title: true,
-                  },
-                },
-                steps: {
-                  orderBy: {
-                    order: 'asc',
-                  },
-                },
-              },
-            },
+        topic: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            photoURL: true,
           },
         },
       },
     })
+
+    if (!lessonPlan) {
+      throw new NotFoundException(
+        'Não existe um plano de aula com esse identificador.',
+      )
+    }
+
+    if (!lessonPlan.isPublic && lessonPlan.user.id !== userId) {
+      throw new UnauthorizedException(
+        'Você não tem permissão para realizar essa ação.',
+      )
+    }
+
+    const complexityLabelMap = {
+      beginner: 'Iniciante',
+      intermediate: 'Intermediário',
+    }
+
+    const exampleLabelMap = {
+      correct: 'Correto',
+      erroneous: 'Errado',
+    }
+
+    return {
+      ...lessonPlan,
+      complexityLabel: lessonPlan.complexity
+        ? complexityLabelMap[lessonPlan.complexity]
+        : null,
+      exampleLabel: lessonPlan.example
+        ? exampleLabelMap[lessonPlan.example]
+        : null,
+    }
+  }
+
+  async findManyLessonsPlan({
+    userId,
+    page,
+    perPage,
+    orderBy,
+    lessonPlanName,
+    complexity,
+    myLessons,
+    example,
+    subjectId,
+    topicId,
+  }: FindManyLessonPlanProps) {
+    const where: Prisma.LessonPlanWhereInput = {}
+    if (lessonPlanName) {
+      where.title = { contains: lessonPlanName, mode: 'insensitive' }
+    }
+
+    if (complexity) {
+      where.complexity = { equals: complexity }
+    }
+
+    if (example) {
+      where.example = { equals: example }
+    }
+
+    if (subjectId) {
+      where.subjectId = { equals: subjectId }
+    }
+
+    if (topicId) {
+      where.topicId = { equals: topicId }
+    }
+
+    if (myLessons) {
+      where.userId = { contains: userId, mode: 'insensitive' }
+    } else {
+      where.NOT = { userId: { equals: userId } }
+      where.isPublic = true
+    }
+
+    const lessonPlans = await this.prisma.lessonPlan.findMany({
+      where,
+      skip: (page - 1) * perPage,
+      take: perPage,
+      orderBy: { createdAt: orderBy === 'asc' ? 'asc' : 'desc' },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        createdAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            photoURL: true,
+          },
+        },
+      },
+    })
+
+    const total = await this.prisma.lessonPlan.count({ where })
+
+    return {
+      data: lessonPlans,
+      meta: {
+        total,
+        page,
+        perPage,
+        totalPages: Math.ceil(total / perPage),
+      },
+    }
   }
 }

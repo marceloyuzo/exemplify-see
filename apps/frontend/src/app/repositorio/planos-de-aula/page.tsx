@@ -35,16 +35,37 @@ export default function LessonPlanRepositoryPage() {
       </h2>
 
       <section className="mt-8">
-        <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-          Meus Planos de Aulas
-        </h3>
+        <div className="flex items-end gap-2">
+          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+            Meus Planos de Aulas
+          </h3>
+          <span
+            className="underline text-sm text-secondary-foreground cursor-pointer"
+            onClick={() =>
+              router.push('/repositorio/planos-de-aula/meus-planos')
+            }
+          >
+            Explorar mais
+          </span>
+        </div>
+
         <LessonPlanCardList myRepository={true} />
       </section>
 
       <section className="mt-8">
-        <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-          Planos de Aulas da Comunidade
-        </h3>
+        <div className="flex items-end gap-2">
+          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+            Planos de Aulas da Comunidade
+          </h3>
+          <span
+            className="underline text-sm text-secondary-foreground cursor-pointer"
+            onClick={() =>
+              router.push('/repositorio/planos-de-aula/planos-da-comunidade')
+            }
+          >
+            Explorar mais
+          </span>
+        </div>
         <LessonPlanCardList myRepository={false} />
       </section>
     </>

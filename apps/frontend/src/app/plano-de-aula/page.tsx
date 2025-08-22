@@ -11,7 +11,7 @@ import { LessonPlanProvider } from '@/contexts/lesson-plan-context'
 import LessonPlanMenu from '@/components/lesson-plan/lesson-plan-menu'
 import LessonPlanContent from '@/components/lesson-plan/lesson-plan-content'
 
-const APPROACH_ID = '676bd969-a0b5-4886-b374-f2d631bcf5a2'
+const APPROACH_ID = 'ce2fd7bd-a7bb-4438-86c3-98f4dcb0e105'
 
 export default function LessonPlanPage() {
   const router = useRouter()
@@ -24,6 +24,10 @@ export default function LessonPlanPage() {
   } = useQuery({
     queryKey: ['axisList', APPROACH_ID],
     queryFn: () => getAxisList({ approachId: APPROACH_ID }),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false,
+    retry: 3,
   })
 
   const breadcrumbItems = [

@@ -1,6 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import LessonPlanCardItem from './lesson-plan-card-item'
 import { getHighlightsLessonPlans } from '@/api/lesson-plan/get-highlights-lesson-plans'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel'
 
 interface LessonPlanCardListProps {
   myRepository: boolean
@@ -19,6 +26,9 @@ export default function LessonPlanCardList({
       getHighlightsLessonPlans({
         myRepository,
       }),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false,
   })
 
   if (isLoading) {
@@ -54,15 +64,32 @@ export default function LessonPlanCardList({
         </div>
       )}
 
-      {LessonPlansData.map((lessonPlan) => (
-        <LessonPlanCardItem
-          key={lessonPlan.id}
-          id={lessonPlan.id}
-          title={lessonPlan.title}
-          description={lessonPlan.description}
-          createdAt={lessonPlan.createdAt}
-        />
-      ))}
+      <Carousel
+        className="w-full col-span-4"
+        opts={{ align: 'start', slidesToScroll: 1 }}
+      >
+        <CarouselPrevious />
+        <CarouselNext />
+        <CarouselContent className="-ml-1">
+          {LessonPlansData.map((lessonPlan, index) => (
+            <CarouselItem
+              key={index}
+              className="pl-1 md:basis-1/2 lg:basis-1/4"
+            >
+              <div className="p-1">
+                <LessonPlanCardItem
+                  key={lessonPlan.id}
+                  id={lessonPlan.id}
+                  title={lessonPlan.title}
+                  description={lessonPlan.description}
+                  createdAt={lessonPlan.createdAt}
+                  user={lessonPlan.user}
+                />
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
     </div>
   )
 }

@@ -5,8 +5,21 @@ import {
   IsArray,
   ValidateNested,
   IsUUID,
+  IsBoolean,
+  IsEnum,
 } from 'class-validator'
 import { Type } from 'class-transformer'
+
+// Enums alinhados com o Prisma
+export enum Complexity {
+  beginner = 'beginner',
+  intermediate = 'intermediate',
+}
+
+export enum Example {
+  correct = 'correct',
+  erroneous = 'erroneous',
+}
 
 export class LessonPlanStepDto {
   @IsString()
@@ -55,6 +68,26 @@ export class CreateLessonPlanDto {
   @IsString()
   @IsOptional()
   description?: string
+
+  @IsUUID()
+  @IsOptional()
+  subjectId?: string
+
+  @IsUUID()
+  @IsOptional()
+  topicId?: string
+
+  @IsEnum(Complexity)
+  @IsOptional()
+  complexity?: Complexity
+
+  @IsEnum(Example)
+  @IsOptional()
+  example?: Example
+
+  @IsBoolean()
+  @IsNotEmpty()
+  isPublic: boolean
 
   @IsUUID()
   @IsNotEmpty()

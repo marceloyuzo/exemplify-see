@@ -120,17 +120,34 @@ model Step {
   @@map("steps")
 }
 
+enum Complexity {
+  beginner
+  intermediate
+}
+
+enum Example {
+  correct
+  erroneous
+}
+
 model LessonPlan {
-  id          String    @id @default(uuid())
+  id          String      @id @default(uuid())
   title       String
   description String?
-  userId      String    @map("user_id")
-  approachId  String    @map("approach_id")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime? @updatedAt @map("updated_at")
+  subjectId   String?     @map("subject_id")
+  topicId     String?     @map("topic_id")
+  complexity  Complexity?
+  example     Example?
+  isPublic    Boolean     @default(true) @map("is_public")
+  userId      String      @map("user_id")
+  approachId  String      @map("approach_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime?   @updatedAt @map("updated_at")
 
   user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   approach Approach         @relation(fields: [approachId], references: [id], onDelete: Cascade)
+  subject  Subject?         @relation(fields: [subjectId], references: [id])
+  topic    Topic?           @relation(fields: [topicId], references: [id])
   axes     LessonPlanAxis[]
 
   @@map("lesson_plans")
@@ -180,4 +197,24 @@ model LessonPlanStep {
   lessonPlanAnswer LessonPlanAnswer @relation(fields: [lessonPlanAnswerId], references: [id], onDelete: Cascade)
 
   @@map("lesson_plan_steps")
+}
+
+model Subject {
+  id         String       @id @default(uuid())
+  title      String
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime?    @updatedAt @map("updated_at")
+  LessonPlan LessonPlan[]
+
+  @@map("subjects")
+}
+
+model Topic {
+  id         String       @id @default(uuid())
+  title      String
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime?    @updatedAt @map("updated_at")
+  LessonPlan LessonPlan[]
+
+  @@map("topics")
 }

@@ -8,6 +8,8 @@ import { ApproachModule } from './resources/approach/approach.module'
 import { AxisModule } from './resources/axis/axis.module'
 import { QuestionModule } from './resources/question/question.module'
 import { LessonPlanModule } from './resources/lesson-plan/lesson-plan.module'
+import { SubjectModule } from './resources/subject/subject.module'
+import { TopicModule } from './resources/topic/topic.module'
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { LessonPlanModule } from './resources/lesson-plan/lesson-plan.module'
     AxisModule,
     QuestionModule,
     LessonPlanModule,
+    SubjectModule,
+    TopicModule,
   ],
   controllers: [AppController],
   providers: [],

@@ -9,6 +9,8 @@ import {
   useEffect,
 } from 'react'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getQuestionRoot } from '@/api/questions/get-question-root'
 import { getQuestionNext } from '@/api/questions/get-question-next'
@@ -18,6 +20,21 @@ import {
 } from '@/api/lesson-plan/create-lesson-plan'
 import { toast } from 'sonner'
 import { Step } from '@/components/question/question-dialog'
+
+// Schema para o formulário de metadados do plano de aula
+const lessonPlanMetadataSchema = z.object({
+  title: z.string().min(1, 'Título é obrigatório'),
+  description: z.string().optional(),
+  subjectId: z.string().optional(),
+  topicId: z.string().optional(),
+  complexity: z.string().optional(),
+  example: z.string().optional(),
+  isPublic: z.boolean(),
+})
+
+export type LessonPlanMetadataFormData = z.infer<
+  typeof lessonPlanMetadataSchema
+>
 
 export interface Question {
   id: string
@@ -55,8 +72,11 @@ export interface AxisData extends AxisState {
 }
 
 interface LessonPlanContextType {
-  // Form control
-  form: ReturnType<typeof useForm<FormData>>
+  // Form control para respostas das perguntas
+  questionsForm: ReturnType<typeof useForm<FormData>>
+
+  // Form control para metadados do plano de aula
+  metadataForm: ReturnType<typeof useForm<LessonPlanMetadataFormData>>
 
   // Axis data
   getAxisData: (axisId: string) => AxisData
@@ -71,10 +91,6 @@ interface LessonPlanContextType {
   goToPreviousQuestion: (axisId: string) => void
 
   // Lesson plan management
-  title: string
-  description: string
-  setTitle: (title: string) => void
-  setDescription: (description: string) => void
   saveLessonPlan: () => Promise<void>
   resetAllForms: () => void
 
@@ -98,17 +114,24 @@ export function LessonPlanProvider({
   axisIds,
   approachId,
 }: LessonPlanProviderProps) {
-  // Estados globais
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
   const queryClient = useQueryClient()
 
-  // Form único para todos os eixos
-  const form = useForm<FormData>({
+  // Form para respostas das perguntas
+  const questionsForm = useForm<FormData>({
     defaultValues: {},
   })
 
-  const { watch, setValue, reset, getValues } = form
+  // Form para metadados do plano de aula
+  const metadataForm = useForm<LessonPlanMetadataFormData>({
+    resolver: zodResolver(lessonPlanMetadataSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      isPublic: false,
+    },
+  })
+
+  const { watch, setValue, reset, getValues } = questionsForm
 
   // Estados para cada eixo
   const [axisStates, setAxisStates] = useState<Record<string, AxisState>>({})
@@ -132,12 +155,19 @@ export function LessonPlanProvider({
   const rootQueries = useQuery({
     queryKey: ['question-roots', axisIds],
     queryFn: async () => {
-      const promises = axisIds.map(async (axisId) => ({
-        axisId,
-        question: await getQuestionRoot({ axisId }),
-      }))
+      const promises = axisIds.map(async (axisId) => {
+        const question = await getQuestionRoot({ axisId })
+        return {
+          axisId,
+          question: question || null,
+        }
+      })
       return await Promise.all(promises)
     },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false,
+    retry: 3,
     enabled: axisIds.length > 0,
   })
 
@@ -146,10 +176,11 @@ export function LessonPlanProvider({
     if (rootQueries.data) {
       setAxisStates((prevStates) => {
         const newStates = { ...prevStates }
+        console.log(rootQueries.data)
         rootQueries.data.forEach(({ axisId, question }) => {
           newStates[axisId] = {
             ...prevStates[axisId],
-            currentQuestions: [question],
+            currentQuestions: question ? [question] : [],
             questionsHistory: [],
             currentSteps: [],
             isLoadingRoot: false,
@@ -458,11 +489,14 @@ export function LessonPlanProvider({
 
   // Salvar plano de aula
   const saveLessonPlan = useCallback(async () => {
-    if (!title.trim()) {
-      toast.error('Por favor, insira um título para o plano de aula')
+    // Validar formulário de metadados
+    const metadataValid = await metadataForm.trigger()
+    if (!metadataValid) {
+      toast.error('Por favor, preencha todos os campos obrigatórios')
       return
     }
 
+    const metadataValues = metadataForm.getValues()
     const axes: LessonPlanAxis[] = []
 
     for (const axisId of axisIds) {
@@ -505,9 +539,14 @@ export function LessonPlanProvider({
     }
 
     try {
+      console.log(metadataValues)
       await saveLessonPlanMutation({
-        title: title.trim(),
-        description: description.trim() || undefined,
+        title: metadataValues.title,
+        description: metadataValues.description || undefined,
+        subjectId: metadataValues.subjectId,
+        complexity: metadataValues.complexity,
+        example: metadataValues.example,
+        isPublic: metadataValues.isPublic,
         approachId,
         axes,
       })
@@ -516,26 +555,18 @@ export function LessonPlanProvider({
     } catch (error) {
       // Erro já tratado no onError
     }
-  }, [
-    title,
-    description,
-    approachId,
-    axisIds,
-    getAxisData,
-    saveLessonPlanMutation,
-  ])
+  }, [metadataForm, approachId, axisIds, getAxisData, saveLessonPlanMutation])
 
   // Resetar todos os formulários
   const resetAllForms = useCallback(() => {
-    setTitle('')
-    setDescription('')
+    metadataForm.reset()
     reset()
 
     // Resetar todos os eixos
     axisIds.forEach((axisId) => {
       resetAxis(axisId)
     })
-  }, [axisIds, resetAxis, reset])
+  }, [axisIds, resetAxis, reset, metadataForm])
 
   // Computed values
   const isAnyFormCompleted = Object.values(axisStates).some((state) => {
@@ -551,15 +582,12 @@ export function LessonPlanProvider({
   }).length
 
   const contextValue: LessonPlanContextType = {
-    form,
+    questionsForm,
+    metadataForm,
     getAxisData,
     updateAxisAnswer,
     resetAxis,
     goToPreviousQuestion,
-    title,
-    description,
-    setTitle,
-    setDescription,
     saveLessonPlan,
     resetAllForms,
     isSaving,

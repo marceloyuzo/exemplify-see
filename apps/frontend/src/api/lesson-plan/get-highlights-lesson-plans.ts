@@ -9,6 +9,11 @@ export interface GetHighlightsLessonResponse {
   title: string
   description: string
   createdAt: string
+  user: {
+    id: string
+    name: string
+    photoURL: string
+  }
 }
 
 export async function getHighlightsLessonPlans({

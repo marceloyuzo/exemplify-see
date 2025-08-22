@@ -59,10 +59,7 @@ export default function UserMenu() {
             className="cursor-pointer h-auto p-0 hover:bg-transparent"
           >
             <Avatar>
-              <AvatarImage
-                src={user.photoURL ?? './avatar.jpg'}
-                alt="Profile image"
-              />
+              <AvatarImage src={user.photoURL} alt="Profile image" />
               <AvatarFallback>teste</AvatarFallback>
             </Avatar>
           </Button>

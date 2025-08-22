@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Card,
   CardContent,
@@ -7,15 +7,25 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { useRouter } from 'next/navigation'
+import { UserRoundIcon } from 'lucide-react'
+import { useState } from 'react'
+import LessonPlanDetailed from './lesson-plan-detailed'
+
+interface User {
+  id: string
+  name: string
+  photoURL: string
+}
 
 interface LessonPlanCardItemProps {
   id: string
   title: string
   description: string
   createdAt: string
+  user: User
 }
 
 export default function LessonPlanCardItem({
@@ -23,38 +33,48 @@ export default function LessonPlanCardItem({
   title,
   description,
   createdAt,
+  user,
 }: LessonPlanCardItemProps) {
-  const router = useRouter()
+  const [open, setOpen] = useState<boolean>(false)
   const dateFormatted = format(new Date(createdAt), "d 'de' MMMM 'de' yyyy", {
     locale: ptBR,
   })
 
   return (
-    <Card
-      className="w-full max-w-xs h-64 flex flex-col cursor-pointer transition-all duration-300 hover:scale-[1.01]"
-      onClick={() => router.push(`/lesson-plan/${id}`)}
-    >
-      <CardHeader>
-        <CardTitle className="line-clamp-1">{title}</CardTitle>
-        <CardDescription className="flex justify-between">
-          {dateFormatted}
+    <>
+      <Card
+        className="w-full max-w-xs h-64 flex flex-col cursor-pointer transition-all duration-300 hover:scale-[1.01]"
+        onClick={() => {
+          setOpen(true)
+        }}
+      >
+        <CardHeader>
+          <CardTitle className="line-clamp-1">{title}</CardTitle>
+          <CardDescription className="flex justify-between">
+            {dateFormatted}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1">
+          <p className="text-sm line-clamp-4 break-words">{description}</p>
+        </CardContent>
+        <CardFooter className="justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Avatar>
+              <AvatarImage src={user.photoURL} alt="Profile image" />
+              <AvatarFallback>
+                <UserRoundIcon
+                  size={16}
+                  className="opacity-60"
+                  aria-hidden="true"
+                />
+              </AvatarFallback>
+            </Avatar>
+            <Label>{user.name}</Label>
+          </div>
           <span className="font-bold text-primary">4.5</span>
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1">
-        <p className="text-sm line-clamp-4 break-words">{description}</p>
-      </CardContent>
-      <CardFooter className="justify-end">
-        <Button
-          size="sm"
-          className="text-xs inset-4"
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          Usar Modelo
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+      <LessonPlanDetailed open={open} setOpen={setOpen} lessonId={id} />
+    </>
   )
 }

@@ -11,8 +11,8 @@ interface LessonPlanFormProps {
 export default function LessonPlanForm({
   lessonPlanData,
 }: LessonPlanFormProps) {
-  const { form } = useLessonPlanContext()
-  const { setValue } = form
+  const { questionsForm } = useLessonPlanContext()
+  const { setValue } = questionsForm
 
   const {
     currentQuestions,
@@ -29,6 +29,18 @@ export default function LessonPlanForm({
         <CardContent>
           <div className="flex items-center justify-center p-6">
             Carregando pergunta...
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (currentQuestions.length === 0) {
+    return (
+      <Card className="col-span-3">
+        <CardContent>
+          <div className="flex items-center justify-center p-6">
+            Não há perguntas cadastradas nesse eixo.
           </div>
         </CardContent>
       </Card>
