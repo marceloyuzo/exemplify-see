@@ -25,6 +25,7 @@ import { useParams } from 'next/navigation'
 import { useSingleParam } from '@/utils/single-param'
 import { getQuestion } from '@/api/questions/get-question'
 import { patchQuestion } from '@/api/questions/patch-question'
+import { Checkbox } from '../ui/checkbox'
 
 interface CreateQuestionDialogProps {
   parentTransitionId?: string
@@ -38,11 +39,26 @@ export interface Step {
   order: number
 }
 
-const createNewQuestionSchema = z.object({
-  title: z.string().min(1, 'Enunciado é obrigatório'),
-  optionA: z.string().min(1, 'Resposta é obrigatório'),
-  optionB: z.string().min(1, 'Resposta é obrigatório'),
-})
+const createNewQuestionSchema = z
+  .object({
+    title: z.string().min(1, 'Enunciado é obrigatório'),
+    optionA: z.string().min(1, 'Resposta é obrigatório'),
+    optionB: z.string().min(1, 'Resposta é obrigatório'),
+    optionC: z.string().optional(),
+    enableThirdOption: z.boolean().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.enableThirdOption && !data.optionC?.trim()) {
+        return false
+      }
+      return true
+    },
+    {
+      message: 'Opção C é obrigatória quando habilitada',
+      path: ['optionC'],
+    },
+  )
 
 type CreateNewQuestionSchema = z.infer<typeof createNewQuestionSchema>
 
@@ -55,7 +71,9 @@ export default function QuestionDialog({
   const queryClient = useQueryClient()
   const [openStepA, setOpenStepA] = useState(false)
   const [openStepB, setOpenStepB] = useState(false)
+  const [openStepC, setOpenStepC] = useState(false)
   const [open, setOpen] = useState(false)
+  const [enableThirdOption, setEnableThirdOption] = useState(false)
 
   const { data } = useQuery({
     queryKey: ['question', questionId],
@@ -68,18 +86,22 @@ export default function QuestionDialog({
 
   const [stepsA, setStepsA] = useState<Step[]>([])
   const [stepsB, setStepsB] = useState<Step[]>([])
+  const [stepsC, setStepsC] = useState<Step[]>([])
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
-  } = useForm({
+  } = useForm<CreateNewQuestionSchema>({
     resolver: zodResolver(createNewQuestionSchema),
     defaultValues: {
       title: '',
       optionA: '',
       optionB: '',
+      optionC: '',
+      enableThirdOption: false,
     },
   })
 
@@ -106,28 +128,32 @@ export default function QuestionDialog({
 
   useEffect(() => {
     if (data) {
+      const hasThirdOption = data.transitionsFromHere?.length > 2
+
       const formData = {
         title: data.title || '',
         optionA: data.transitionsFromHere?.[0]?.answerValue?.title || '',
         optionB: data.transitionsFromHere?.[1]?.answerValue?.title || '',
+        optionC: data.transitionsFromHere?.[2]?.answerValue?.title || '',
+        enableThirdOption: hasThirdOption,
       }
 
       reset(formData)
+      setEnableThirdOption(hasThirdOption)
       setStepsA(data.transitionsFromHere?.[0]?.answerValue?.steps || [])
       setStepsB(data.transitionsFromHere?.[1]?.answerValue?.steps || [])
+      setStepsC(data.transitionsFromHere?.[2]?.answerValue?.steps || [])
     } else {
       setStepsA([])
       setStepsB([])
+      setStepsC([])
+      setEnableThirdOption(false)
     }
   }, [data, reset])
 
-  const isInitialQuestion = parentTransitionId === 'initial-question'
+  async function handleAddQuestion(formData: CreateNewQuestionSchema) {
+    const { optionA, optionB, optionC, title } = formData
 
-  async function handleAddQuestion({
-    optionA,
-    optionB,
-    title,
-  }: CreateNewQuestionSchema) {
     try {
       if (questionId) {
         await editQuestionMutation({
@@ -137,8 +163,14 @@ export default function QuestionDialog({
           optionIdA: data?.transitionsFromHere?.[0]?.answerId || '',
           optionValueB: optionB,
           optionIdB: data?.transitionsFromHere?.[1]?.answerId || '',
+          ...(enableThirdOption &&
+            optionC && {
+              optionValueC: optionC,
+              optionIdC: data?.transitionsFromHere?.[2]?.answerId || '',
+            }),
           stepsA,
           stepsB,
+          ...(enableThirdOption && { stepsC }),
         })
 
         toast.success('Questão editada com sucesso.', {
@@ -150,26 +182,24 @@ export default function QuestionDialog({
         return
       }
 
-      if (isInitialQuestion) {
-        await createQuestionMutation({
-          title,
-          optionA,
-          optionB,
-          axisId,
-          stepsA,
-          stepsB,
-        })
-      } else {
-        await createQuestionMutation({
-          title,
-          optionA,
-          optionB,
-          axisId,
+      const questionData = {
+        title,
+        optionA,
+        optionB,
+        axisId,
+        stepsA,
+        stepsB,
+        ...(enableThirdOption &&
+          optionC && {
+            optionC,
+            stepsC,
+          }),
+        ...(parentTransitionId !== 'initial-question' && {
           parentTransitionId,
-          stepsA,
-          stepsB,
-        })
+        }),
       }
+
+      await createQuestionMutation(questionData)
 
       toast.success('Questão criada com sucesso.', {
         position: 'top-center',
@@ -206,7 +236,7 @@ export default function QuestionDialog({
             {questionId ? 'Editar pergunta' : 'Adicionar pergunta'}
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
           <form
             className="flex flex-col gap-6"
             onSubmit={handleSubmit(handleAddQuestion)}
@@ -240,9 +270,32 @@ export default function QuestionDialog({
                 )}
               </div>
 
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="enable-third-option"
+                  checked={enableThirdOption}
+                  onCheckedChange={(checked) => {
+                    setEnableThirdOption(checked as boolean)
+                    if (!checked) {
+                      reset({
+                        ...watch(),
+                        optionC: '',
+                        enableThirdOption: false,
+                      })
+                      setStepsC([])
+                    }
+                  }}
+                />
+                <Label htmlFor="enable-third-option">
+                  Adicionar terceira opção de resposta
+                </Label>
+              </div>
+
               <Label>Opções de resposta</Label>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div
+                className={`grid gap-4 ${enableThirdOption ? 'grid-cols-3' : 'grid-cols-2'}`}
+              >
                 <div className="grid gap-3">
                   <InputAnimated label="Opção A" {...register('optionA')} />
                   {errors.optionA && (
@@ -261,11 +314,24 @@ export default function QuestionDialog({
                   )}
                 </div>
 
+                {enableThirdOption && (
+                  <div className="grid gap-3">
+                    <InputAnimated label="Opção C" {...register('optionC')} />
+                    {errors.optionC && (
+                      <span className="text-sm text-red-500">
+                        {errors.optionC.message}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div
+                className={`grid gap-4 ${enableThirdOption ? 'grid-cols-3' : 'grid-cols-2'}`}
+              >
                 <div className="flex flex-col gap-2">
                   <Label>Passos da Opção A</Label>
-
                   <StepsList setSteps={setStepsA} steps={stepsA} />
-
                   <Button
                     variant={'outline'}
                     type="button"
@@ -278,9 +344,7 @@ export default function QuestionDialog({
 
                 <div className="flex flex-col gap-2">
                   <Label>Passos da Opção B</Label>
-
                   <StepsList setSteps={setStepsB} steps={stepsB} />
-
                   <Button
                     variant={'outline'}
                     type="button"
@@ -290,6 +354,21 @@ export default function QuestionDialog({
                     Adicionar mais passos
                   </Button>
                 </div>
+
+                {enableThirdOption && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Passos da Opção C</Label>
+                    <StepsList setSteps={setStepsC} steps={stepsC} />
+                    <Button
+                      variant={'outline'}
+                      type="button"
+                      className="w-full"
+                      onClick={() => setOpenStepC(true)}
+                    >
+                      Adicionar mais passos
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -301,6 +380,7 @@ export default function QuestionDialog({
                   disabled={isPending}
                   onClick={() => {
                     reset()
+                    setEnableThirdOption(false)
                   }}
                 >
                   Cancelar
@@ -334,6 +414,15 @@ export default function QuestionDialog({
         steps={stepsB}
         setSteps={setStepsB}
       />
+      {enableThirdOption && (
+        <StepDialog
+          step={null}
+          open={openStepC}
+          setOpen={setOpenStepC}
+          steps={stepsC}
+          setSteps={setStepsC}
+        />
+      )}
     </>
   )
 }

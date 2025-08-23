@@ -27,20 +27,24 @@ export class QuestionController {
       axisId,
       optionA,
       optionB,
+      optionC,
       title,
       parentTransitionId,
       stepsA,
       stepsB,
+      stepsC,
     }: CreateQuestionDto,
   ) {
     return await this.questionService.createQuestion({
       axisId,
       optionA,
       optionB,
+      optionC,
       title,
       parentTransitionId,
       stepsA,
       stepsB,
+      stepsC,
     })
   }
 
@@ -84,10 +88,13 @@ export class QuestionController {
     {
       optionIdA,
       optionIdB,
+      optionIdC,
       optionValueA,
       optionValueB,
+      optionValueC,
       stepsA,
       stepsB,
+      stepsC,
       title,
     }: EditQuestionDTO,
   ) {
@@ -95,10 +102,13 @@ export class QuestionController {
       questionId: id,
       optionIdA,
       optionIdB,
+      optionIdC,
       optionValueA,
       optionValueB,
+      optionValueC,
       stepsA,
       stepsB,
+      stepsC,
       title,
     })
   }

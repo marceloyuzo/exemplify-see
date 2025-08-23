@@ -8,8 +8,11 @@ export interface PatchQuestionBody {
   optionValueA: string
   optionIdB: string
   optionValueB: string
+  optionIdC?: string
+  optionValueC?: string
   stepsA: Step[]
   stepsB: Step[]
+  stepsC?: Step[]
 }
 
 export async function patchQuestion({
@@ -18,11 +21,14 @@ export async function patchQuestion({
   optionIdB,
   optionValueA,
   optionValueB,
+  optionIdC,
+  optionValueC,
   title,
   stepsA,
   stepsB,
+  stepsC,
 }: PatchQuestionBody) {
-  const response = await api.patch(`/question/${questionId}`, {
+  const payload = {
     optionIdA,
     optionIdB,
     optionValueA,
@@ -30,7 +36,17 @@ export async function patchQuestion({
     title,
     stepsA,
     stepsB,
-  })
+  }
+
+  if (optionValueC && optionValueC.trim()) {
+    Object.assign(payload, {
+      optionIdC: optionIdC || '',
+      optionValueC: optionValueC.trim(),
+      stepsC: stepsC || [],
+    })
+  }
+
+  const response = await api.patch(`/question/${questionId}`, payload)
 
   return response.data
 }

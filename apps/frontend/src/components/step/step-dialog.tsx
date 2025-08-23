@@ -38,7 +38,12 @@ export default function StepDialog({
   step,
   steps,
 }: StepDialogProps) {
-  const { register, handleSubmit, reset } = useForm<AddStepSchema>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<AddStepSchema>({
     resolver: zodResolver(addStepSchema),
   })
 
@@ -85,10 +90,15 @@ export default function StepDialog({
           }}
           id="step-form"
         >
-          <InputAnimated label="Título do passo" {...register('title')} />
+          <InputAnimated
+            label="Título do passo"
+            {...register('title')}
+            error={errors.title}
+          />
           <TextareaAnimated
             label="Descrição do passo"
             {...register('description')}
+            error={errors.description}
           />
 
           <DialogFooter>

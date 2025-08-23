@@ -1,4 +1,10 @@
-import { IsString, IsArray, ValidateNested, IsNumber } from 'class-validator'
+import {
+  IsString,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  IsOptional,
+} from 'class-validator'
 import { Type } from 'class-transformer'
 
 class StepDTO {
@@ -29,6 +35,14 @@ export class EditQuestionDTO {
   optionValueB: string
 
   @IsString()
+  @IsOptional()
+  optionIdC?: string
+
+  @IsString()
+  @IsOptional()
+  optionValueC?: string
+
+  @IsString()
   title: string
 
   @IsArray()
@@ -40,4 +54,10 @@ export class EditQuestionDTO {
   @ValidateNested({ each: true })
   @Type(() => StepDTO)
   stepsB: StepDTO[]
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StepDTO)
+  @IsOptional()
+  stepsC?: StepDTO[]
 }

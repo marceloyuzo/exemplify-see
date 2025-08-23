@@ -1,8 +1,8 @@
 import {
   EdgeProps,
-  getSmoothStepPath,
   BaseEdge,
   EdgeLabelRenderer,
+  getBezierPath,
 } from '@xyflow/react'
 import React from 'react'
 
@@ -15,7 +15,7 @@ export const CustomEdge: React.FC<EdgeProps> = ({
   targetPosition,
   label,
 }) => {
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     targetX,

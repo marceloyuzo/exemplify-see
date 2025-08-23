@@ -4,14 +4,23 @@ import { StepProps, StepService } from '../step/step.service'
 import { Prisma, PrismaClient } from '@prisma/client'
 import { DefaultArgs } from '@prisma/client/runtime/library'
 
+interface Answer {
+  id: string
+  title: string
+  createdAt: Date
+  updatedAt: Date | null
+}
+
 interface CreateQuestionProps {
   axisId: string
   title: string
   optionA: string
   optionB: string
+  optionC?: string
   parentTransitionId?: string
   stepsA: StepProps[]
   stepsB: StepProps[]
+  stepsC?: StepProps[]
 }
 
 interface FindQuestionsByAxisIdProps {
@@ -34,10 +43,13 @@ interface PatchQuestionProps {
   questionId: string
   optionIdA: string
   optionIdB: string
+  optionIdC?: string
   optionValueA: string
   optionValueB: string
+  optionValueC?: string
   stepsA: StepProps[]
   stepsB: StepProps[]
+  stepsC?: StepProps[]
   title: string
 }
 
@@ -57,9 +69,11 @@ export class QuestionService {
     title,
     optionA,
     optionB,
+    optionC,
     parentTransitionId,
     stepsA,
     stepsB,
+    stepsC,
   }: CreateQuestionProps) {
     const isAxisExists = await this.prisma.axis.findUnique({
       where: {
@@ -91,6 +105,15 @@ export class QuestionService {
         },
       })
 
+      let answerC: Answer | null = null
+      if (optionC && optionC.trim()) {
+        answerC = await prisma.answer.create({
+          data: {
+            title: optionC.trim(),
+          },
+        })
+      }
+
       await this.stepService.createSteps(
         {
           answerId: answerA.id,
@@ -107,6 +130,16 @@ export class QuestionService {
         prisma,
       )
 
+      if (answerC && stepsC) {
+        await this.stepService.createSteps(
+          {
+            answerId: answerC.id,
+            steps: stepsC,
+          },
+          prisma,
+        )
+      }
+
       await prisma.transition.create({
         data: {
           answerId: answerA.id,
@@ -120,6 +153,15 @@ export class QuestionService {
           fromQuestionId: question.id,
         },
       })
+
+      if (answerC) {
+        await prisma.transition.create({
+          data: {
+            answerId: answerC.id,
+            fromQuestionId: question.id,
+          },
+        })
+      }
 
       if (parentTransitionId) {
         const transitionParent = await prisma.transition.findUnique({
@@ -319,11 +361,14 @@ export class QuestionService {
   async patchQuestion({
     optionIdA,
     optionIdB,
+    optionIdC,
     optionValueA,
     optionValueB,
+    optionValueC,
     questionId,
     stepsA,
     stepsB,
+    stepsC,
     title,
   }: PatchQuestionProps) {
     const isQuestionExists = await this.prisma.question.findUnique({
@@ -352,41 +397,58 @@ export class QuestionService {
 
     if (!isAnswerAExists || !isAnswerBExists) {
       throw new NotFoundException(
-        'Não existe uam resposta com esse identificador.',
+        'Não existe uma resposta com esse identificador.',
       )
+    }
+
+    let isAnswerCExists: Answer | null = null
+    if (optionIdC) {
+      isAnswerCExists = await this.prisma.answer.findUnique({
+        where: {
+          id: optionIdC,
+        },
+      })
+
+      if (!isAnswerCExists) {
+        throw new NotFoundException(
+          'Não existe uma resposta C com esse identificador.',
+        )
+      }
     }
 
     const questionUpdated = await this.prisma.$transaction(async (prisma) => {
       await this.stepService.syncSteps(prisma, stepsA, optionIdA)
-
       await this.stepService.syncSteps(prisma, stepsB, optionIdB)
 
-      await Promise.all([
+      if (optionIdC && stepsC) {
+        await this.stepService.syncSteps(prisma, stepsC, optionIdC)
+      }
+
+      const answerUpdates = [
         prisma.answer.update({
-          where: {
-            id: optionIdA,
-          },
-          data: {
-            title: optionValueA,
-          },
+          where: { id: optionIdA },
+          data: { title: optionValueA },
         }),
         prisma.answer.update({
-          where: {
-            id: optionIdB,
-          },
-          data: {
-            title: optionValueB,
-          },
+          where: { id: optionIdB },
+          data: { title: optionValueB },
         }),
-      ])
+      ]
+
+      if (optionIdC && optionValueC) {
+        answerUpdates.push(
+          prisma.answer.update({
+            where: { id: optionIdC },
+            data: { title: optionValueC },
+          }),
+        )
+      }
+
+      await Promise.all(answerUpdates)
 
       return await prisma.question.update({
-        where: {
-          id: questionId,
-        },
-        data: {
-          title,
-        },
+        where: { id: questionId },
+        data: { title },
       })
     })
 

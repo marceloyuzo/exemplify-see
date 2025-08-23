@@ -6,21 +6,25 @@ export interface CreateQuestionBody {
   title: string
   optionA: string
   optionB: string
+  optionC?: string
   parentTransitionId?: string
   stepsA: Step[]
   stepsB: Step[]
+  stepsC?: Step[]
 }
 
 export async function createQuestion({
   axisId,
   optionA,
   optionB,
+  optionC,
   title,
   parentTransitionId,
   stepsA,
   stepsB,
+  stepsC,
 }: CreateQuestionBody) {
-  const response = await api.post('/question', {
+  const payload = {
     axisId,
     optionA,
     optionB,
@@ -28,7 +32,16 @@ export async function createQuestion({
     parentTransitionId,
     stepsA,
     stepsB,
-  })
+  }
+
+  if (optionC && optionC.trim()) {
+    Object.assign(payload, {
+      optionC: optionC.trim(),
+      stepsC: stepsC || [],
+    })
+  }
+
+  const response = await api.post('/question', payload)
 
   return response.data
 }

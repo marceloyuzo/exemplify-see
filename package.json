@@ -12,7 +12,7 @@
     "db:migrate:deploy": "cd apps/backend && npx prisma migrate deploy",
     "db:migrate:reset": "cd apps/backend && npx prisma migrate reset",
     "db:migrate:status": "cd apps/backend && npx prisma migrate status",
-    "db:seed": "cd apps/backend && npx prisma db seed",
+    "db:seed": "cd apps/backend && npx tsx prisma/seed.ts",
     "db:generate": "cd apps/backend && npx prisma generate",
     "db:push": "cd apps/backend && npx prisma db push",
     "db:pull": "cd apps/backend && npx prisma db pull"
