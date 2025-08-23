@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/database/services/prisma.service'
 import { StepProps, StepService } from '../step/step.service'
-import { Prisma, PrismaClient } from 'generated/prisma'
-import { DefaultArgs } from 'generated/prisma/runtime/library'
+import { Prisma, PrismaClient } from '@prisma/client'
+import { DefaultArgs } from '@prisma/client/runtime/library'
 
 interface CreateQuestionProps {
   axisId: string

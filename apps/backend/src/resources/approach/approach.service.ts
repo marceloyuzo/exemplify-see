@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { Prisma } from 'generated/prisma'
+import { Prisma } from '@prisma/client'
 import { PrismaService } from 'src/database/services/prisma.service'
 
 interface CreateApproachProps {

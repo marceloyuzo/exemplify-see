@@ -12,7 +12,7 @@ import {
 import type { Response, Request } from 'express'
 import { AuthService } from './auth.service'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard'
-import { User } from 'generated/prisma'
+import { User } from '@prisma/client'
 
 interface AuthLoginResponse {
   success: boolean

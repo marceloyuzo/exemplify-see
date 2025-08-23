@@ -11,7 +11,7 @@ import {
 import { LessonPlanService } from './lesson-plan.service'
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard'
-import { User } from 'generated/prisma'
+import { User } from '@prisma/client'
 
 @Controller('/lesson-plan')
 @UseGuards(JwtAuthGuard)

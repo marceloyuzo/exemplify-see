@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common'
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
 import { PrismaService } from 'src/database/services/prisma.service'
-import { Prisma } from 'generated/prisma'
+import { Prisma } from '@prisma/client'
 
 interface GetHighlightsLessonPlansProps {
   userId: string

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { Prisma, PrismaClient } from 'generated/prisma'
-import { DefaultArgs } from 'generated/prisma/runtime/library'
+import { Prisma, PrismaClient } from '@prisma/client'
+import { DefaultArgs } from '@prisma/client/runtime/library'
 import { PrismaService } from 'src/database/services/prisma.service'
 
 export interface StepProps {

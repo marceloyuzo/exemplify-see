@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { Prisma, User } from 'generated/prisma'
+import { Prisma, User } from '@prisma/client'
 import { PrismaService } from 'src/database/services/prisma.service'
 import { CreateUserDto } from './dto/create-user-dto'
 import { EditUserDto } from './dto/edit-user-dto'
