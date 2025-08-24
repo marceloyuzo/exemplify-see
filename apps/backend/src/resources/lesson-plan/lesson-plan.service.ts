@@ -6,6 +6,7 @@ import {
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
 import { PrismaService } from 'src/database/services/prisma.service'
 import { Prisma } from '@prisma/client'
+import { UpdateLessonPlanDto } from './dto/update-lesson-plan.dto'
 
 interface GetHighlightsLessonPlansProps {
   userId: string
@@ -108,6 +109,9 @@ export class LessonPlanService {
       where.userId = { contains: userId, mode: 'insensitive' }
     } else {
       where.NOT = { userId: { equals: userId } }
+      where.isPublic = {
+        equals: true,
+      }
     }
 
     const lessonsPlans = await this.prisma.lessonPlan.findMany({
@@ -136,20 +140,34 @@ export class LessonPlanService {
 
   async getLessonPlanById(id: string, userId: string) {
     const lessonPlan = await this.prisma.lessonPlan.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        complexity: true,
-        example: true,
-        isPublic: true,
-        approachId: true,
-        createdAt: true,
-        updatedAt: true,
-        axes: true,
+      where: { id },
+      include: {
+        axes: {
+          include: {
+            answers: {
+              include: {
+                steps: {
+                  orderBy: {
+                    order: 'asc',
+                  },
+                },
+              },
+            },
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            photoURL: true,
+          },
+        },
+        approach: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
         subject: {
           select: {
             id: true,
@@ -160,13 +178,6 @@ export class LessonPlanService {
           select: {
             id: true,
             title: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            photoURL: true,
           },
         },
       },
@@ -203,6 +214,64 @@ export class LessonPlanService {
         ? exampleLabelMap[lessonPlan.example]
         : null,
     }
+  }
+
+  async updateLessonPlan(id: string, payload: UpdateLessonPlanDto) {
+    const { axes, ...lessonPlanData } = payload
+
+    // Usar transaction para garantir consistência
+    const updatedLessonPlan = await this.prisma.$transaction(async (tx) => {
+      // 1. Atualizar dados do plano de aula
+      const lessonPlan = await tx.lessonPlan.update({
+        where: { id },
+        data: {
+          ...lessonPlanData,
+          updatedAt: new Date(),
+        },
+      })
+
+      // 2. Remover todos os eixos existentes (cascade vai remover answers e steps)
+      await tx.lessonPlanAxis.deleteMany({
+        where: { lessonPlanId: id },
+      })
+
+      // 3. Recriar eixos com novos dados
+      for (const axisData of axes) {
+        const createdAxis = await tx.lessonPlanAxis.create({
+          data: {
+            lessonPlanId: id,
+            axisId: axisData.axisId,
+          },
+        })
+
+        // Criar answers para este eixo
+        for (const answerData of axisData.answers) {
+          const createdAnswer = await tx.lessonPlanAnswer.create({
+            data: {
+              lessonPlanAxisId: createdAxis.id,
+              questionId: answerData.questionId,
+              answerId: answerData.answerId,
+            },
+          })
+
+          // Criar steps para esta resposta
+          if (answerData.steps && answerData.steps.length > 0) {
+            await tx.lessonPlanStep.createMany({
+              data: answerData.steps.map((step) => ({
+                lessonPlanAnswerId: createdAnswer.id,
+                title: step.title,
+                description: step.description,
+                order: step.order,
+              })),
+            })
+          }
+        }
+      }
+
+      return lessonPlan
+    })
+
+    return updatedLessonPlan
   }
 
   async findManyLessonsPlan({
@@ -242,7 +311,9 @@ export class LessonPlanService {
       where.userId = { contains: userId, mode: 'insensitive' }
     } else {
       where.NOT = { userId: { equals: userId } }
-      where.isPublic = true
+      where.isPublic = {
+        equals: true,
+      }
     }
 
     const lessonPlans = await this.prisma.lessonPlan.findMany({

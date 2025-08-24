@@ -33,7 +33,8 @@ export default function LessonPlanSaveDialog({
   totalForms,
 }: LessonPlanSaveDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const { metadataForm, saveLessonPlan, isSaving } = useLessonPlanContext()
+  const { metadataForm, saveLessonPlan, isSaving, isOwner, isEditing } =
+    useLessonPlanContext()
 
   const {
     register,
@@ -54,18 +55,26 @@ export default function LessonPlanSaveDialog({
   const { data: subjectsData, isLoading: subjectIsLoading } = useQuery({
     queryKey: ['subject-options'],
     queryFn: getSubjectOptions,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false,
+    retry: 3,
   })
 
   const { data: topicsData, isLoading: topicIsLoading } = useQuery({
     queryKey: ['topic-options'],
     queryFn: getTopicOptions,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false,
+    retry: 3,
   })
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" disabled={!isAnyFormCompleted}>
-          Salvar Plano ({totalCompletedForms}/{totalForms})
+          {isOwner && isEditing ? 'Editar Plano' : 'Salvar Plano'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

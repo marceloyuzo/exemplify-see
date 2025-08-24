@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useQuery } from '@tanstack/react-query'
 import { HomeIcon } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { LessonPlanProvider } from '@/contexts/lesson-plan-context'
 import LessonPlanMenu from '@/components/lesson-plan/lesson-plan-menu'
 import LessonPlanContent from '@/components/lesson-plan/lesson-plan-content'
+import { useUser } from '@/hooks/use-user'
 
 const APPROACH_ID = 'ce2fd7bd-a7bb-4438-86c3-98f4dcb0e105'
 
 export default function LessonPlanPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const lessonPlanId = searchParams.get('lessonPlanId')
+  const { user } = useUser()
 
   const {
     data: axisList,
@@ -55,6 +59,8 @@ export default function LessonPlanPage() {
     <LessonPlanProvider
       axisIds={axisList.map((axis) => axis.id)}
       approachId={APPROACH_ID}
+      lessonPlanId={lessonPlanId}
+      currentUserId={user?.id}
     >
       <div className="flex gap-4">
         <Button

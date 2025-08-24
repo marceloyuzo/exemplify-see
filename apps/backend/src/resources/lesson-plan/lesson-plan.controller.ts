@@ -7,11 +7,13 @@ import {
   UseGuards,
   Request,
   Query,
+  Patch,
 } from '@nestjs/common'
 import { LessonPlanService } from './lesson-plan.service'
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard'
 import { User } from '@prisma/client'
+import { UpdateLessonPlanDto } from './dto/update-lesson-plan.dto'
 
 @Controller('/lesson-plan')
 @UseGuards(JwtAuthGuard)
@@ -28,6 +30,24 @@ export class LessonPlanController {
       userId,
       createLessonPlanDto,
     )
+  }
+
+  @Patch('/:id')
+  async updateLessonPlan(
+    @Param('id') id: string,
+    @Body() body: UpdateLessonPlanDto,
+  ) {
+    return await this.lessonPlanService.updateLessonPlan(id, {
+      approachId: body.approachId,
+      axes: body.axes,
+      isPublic: body.isPublic,
+      title: body.title,
+      complexity: body.complexity,
+      description: body.description,
+      example: body.example,
+      subjectId: body.subjectId,
+      topicId: body.topicId,
+    })
   }
 
   @Get('/highlights')

@@ -89,9 +89,11 @@ export default function LessonPlanForm({
                     <RadioGroupItem
                       value={transition.answerValue.id}
                       id={`${question.id}-${transition.answerValue.id}`}
+                      className="cursor-pointer"
                     />
                     <Label
                       htmlFor={`${question.id}-${transition.answerValue.id}`}
+                      className="cursor-pointer"
                     >
                       {transition.answerValue.title}
                     </Label>

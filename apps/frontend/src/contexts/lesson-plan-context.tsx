@@ -19,7 +19,9 @@ import {
   LessonPlanAxis,
 } from '@/api/lesson-plan/create-lesson-plan'
 import { toast } from 'sonner'
-import { Step } from '@/components/question/question-dialog'
+import { getLessonPlanDetailed } from '@/api/lesson-plan/get-lesson-plan-detailed'
+import { updateLessonPlan } from '@/api/lesson-plan/update-lesson-plan'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 // Schema para o formulário de metadados do plano de aula
 const lessonPlanMetadataSchema = z.object({
@@ -35,6 +37,12 @@ const lessonPlanMetadataSchema = z.object({
 export type LessonPlanMetadataFormData = z.infer<
   typeof lessonPlanMetadataSchema
 >
+
+interface Step {
+  title: string
+  description: string
+  order: number
+}
 
 export interface Question {
   id: string
@@ -99,6 +107,11 @@ interface LessonPlanContextType {
   isAnyFormCompleted: boolean
   totalCompletedForms: number
   totalForms: number
+  isDataLoaded: boolean
+  isEditing: boolean
+  isOwner: boolean
+  originalAuthorId: string | null
+  currentUserId?: string // Você precisa passar isso como prop
 }
 
 const LessonPlanContext = createContext<LessonPlanContextType | null>(null)
@@ -107,14 +120,19 @@ interface LessonPlanProviderProps {
   children: ReactNode
   axisIds: string[]
   approachId: string
+  lessonPlanId: string | null
+  currentUserId?: string // Nova prop necessária
 }
 
 export function LessonPlanProvider({
   children,
   axisIds,
   approachId,
+  lessonPlanId,
+  currentUserId,
 }: LessonPlanProviderProps) {
   const queryClient = useQueryClient()
+  const isEditing = !!lessonPlanId
 
   // Form para respostas das perguntas
   const questionsForm = useForm<FormData>({
@@ -135,6 +153,36 @@ export function LessonPlanProvider({
 
   // Estados para cada eixo
   const [axisStates, setAxisStates] = useState<Record<string, AxisState>>({})
+  const [isDataLoaded, setIsDataLoaded] = useState(false)
+  const [originalAuthorId, setOriginalAuthorId] = useState<string | null>(null)
+
+  const {
+    data: existingLessonPlan,
+    isLoading: isLoadingExisting,
+    isError,
+  } = useQuery({
+    queryKey: ['lesson-plan', lessonPlanId],
+    queryFn: () =>
+      getLessonPlanDetailed({
+        lessonPlanId: lessonPlanId as string,
+      }),
+    enabled: isEditing,
+    staleTime: 5 * 60 * 1000,
+    retry: 3,
+  })
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (isError) {
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('lessonPlanId')
+      router.replace(`?${params.toString()}`)
+    }
+  }, [isError, router, searchParams])
+
+  // Verificar se o usuário é o dono do plano
+  const isOwner = isEditing ? originalAuthorId === currentUserId : true // Se não está editando, sempre pode salvar como novo
 
   // Inicializar estados dos eixos
   useEffect(() => {
@@ -190,6 +238,173 @@ export function LessonPlanProvider({
       })
     }
   }, [rootQueries.data])
+
+  useEffect(() => {
+    if (existingLessonPlan && !isDataLoaded) {
+      // Definir o ID do autor original
+      setOriginalAuthorId(existingLessonPlan.userId)
+
+      // Carregar metadados
+      metadataForm.reset({
+        title: existingLessonPlan.title,
+        description: existingLessonPlan.description || '',
+        subjectId: existingLessonPlan.subjectId || undefined,
+        topicId: existingLessonPlan.topicId || undefined,
+        complexity: existingLessonPlan.complexity || undefined,
+        example: existingLessonPlan.example || undefined,
+        isPublic: existingLessonPlan.isPublic,
+      })
+
+      // Carregar respostas das perguntas
+      const questionsData: FormData = {}
+      existingLessonPlan.axes.forEach((axis) => {
+        axis.answers.forEach((answer) => {
+          questionsData[answer.questionId] = answer.answerId
+        })
+      })
+
+      // Definir valores das respostas
+      Object.entries(questionsData).forEach(([questionId, answerId]) => {
+        setValue(questionId, answerId)
+      })
+
+      setIsDataLoaded(true)
+    }
+  }, [existingLessonPlan, isDataLoaded, metadataForm, setValue])
+
+  const reconstructAxisData = useCallback(async () => {
+    if (!existingLessonPlan || !rootQueries.data) return
+
+    console.log('Iniciando reconstrução dos eixos...', {
+      axisIds,
+      existingAxes: existingLessonPlan.axes.map((a) => ({
+        id: a.axisId,
+        answersCount: a.answers?.length || 0,
+      })),
+    })
+
+    const newAxisStates: Record<string, AxisState> = {}
+
+    for (const axisId of axisIds) {
+      const rootQuestion = rootQueries.data.find(
+        (r) => r.axisId === axisId,
+      )?.question
+      const axisData = existingLessonPlan.axes.find((a) => a.axisId === axisId)
+
+      if (!rootQuestion) {
+        console.warn(`Root question não encontrada para eixo ${axisId}`)
+        continue
+      }
+
+      const currentQuestions = [rootQuestion]
+      const questionsHistory: string[] = []
+      let currentSteps: Step[] = []
+
+      if (axisData && axisData.answers && axisData.answers.length > 0) {
+        // Reconstruir a cadeia de perguntas
+        let currentQuestion = rootQuestion
+        questionsHistory.push(currentQuestion.id)
+
+        for (let i = 0; i < axisData.answers.length; i++) {
+          const answer = axisData.answers[i]
+
+          // Verificar se a resposta corresponde à pergunta atual
+          if (answer.questionId === currentQuestion.id) {
+            console.log(
+              `Resposta ${answer.answerId} corresponde à pergunta ${currentQuestion.id}`,
+            )
+
+            // Se não é a última resposta, buscar próxima pergunta
+            if (i < axisData.answers.length - 1) {
+              try {
+                const nextQuestion = await getQuestionNext({
+                  answerId: answer.answerId,
+                })
+
+                if (nextQuestion) {
+                  // Verificar se a próxima pergunta corresponde à próxima resposta
+                  const nextAnswer = axisData.answers[i + 1]
+                  if (nextQuestion.id === nextAnswer.questionId) {
+                    currentQuestions.push(nextQuestion)
+                    questionsHistory.push(nextQuestion.id)
+                    currentQuestion = nextQuestion
+                    console.log(
+                      `Próxima pergunta adicionada: ${nextQuestion.id}`,
+                    )
+                  } else {
+                    console.warn(
+                      `Inconsistência: próxima pergunta ${nextQuestion.id} não corresponde à próxima resposta ${nextAnswer.questionId}`,
+                    )
+                    break
+                  }
+                } else {
+                  console.warn(
+                    `Não foi possível buscar próxima pergunta para answer ${answer.answerId}`,
+                  )
+                  break
+                }
+              } catch (error) {
+                console.error(
+                  `Erro ao buscar próxima pergunta para answer ${answer.answerId}:`,
+                  error,
+                )
+                break
+              }
+            } else {
+              // É a última resposta, carregar steps
+              if (answer.steps && answer.steps.length > 0) {
+                currentSteps = answer.steps.map((step) => ({
+                  title: step.title,
+                  description: step.description,
+                  order: step.order,
+                }))
+                console.log(
+                  `Steps carregados para ${axisId}:`,
+                  currentSteps.length,
+                )
+              }
+            }
+          } else {
+            console.error(
+              `Resposta ${answer.questionId} não corresponde à pergunta atual ${currentQuestion.id}`,
+            )
+            break
+          }
+        }
+
+        console.log(`Eixo ${axisId} reconstruído com sucesso:`, {
+          questionsCount: currentQuestions.length,
+          historyCount: questionsHistory.length,
+          stepsCount: currentSteps.length,
+        })
+      }
+
+      newAxisStates[axisId] = {
+        currentQuestions,
+        questionsHistory,
+        currentSteps,
+        isLoadingRoot: false,
+        isLoadingNext: false,
+      }
+    }
+
+    console.log(
+      'Definindo novos estados dos eixos:',
+      Object.keys(newAxisStates),
+    )
+    setAxisStates(newAxisStates)
+  }, [existingLessonPlan, rootQueries.data, axisIds])
+
+  useEffect(() => {
+    const reconstructData = async () => {
+      if (isEditing && isDataLoaded && rootQueries.data && existingLessonPlan) {
+        console.log('Iniciando reconstrução dos dados do eixo...')
+        await reconstructAxisData()
+      }
+    }
+
+    reconstructData()
+  }, [isEditing, isDataLoaded, rootQueries.data, existingLessonPlan])
 
   // Função para obter steps de uma resposta
   const getStepsForAnswer = useCallback(
@@ -473,13 +688,24 @@ export function LessonPlanProvider({
     [axisStates, setValue],
   )
 
+  // Determinar qual mutation usar baseado na propriedade
+  const shouldUpdate = isEditing && isOwner
+  const shouldCreate = !isEditing || !isOwner
+
   // Mutation para salvar plano
   const { mutateAsync: saveLessonPlanMutation, isPending: isSaving } =
     useMutation({
-      mutationFn: createLessonPlan,
+      mutationFn: shouldUpdate ? updateLessonPlan : createLessonPlan,
       onSuccess: () => {
-        toast.success('Plano de aula salvo com sucesso!')
+        const action = shouldUpdate ? 'atualizado' : 'salvo'
+        toast.success(`Plano de aula ${action} com sucesso!`)
+
         queryClient.invalidateQueries({ queryKey: ['lesson-plans'] })
+        if (shouldUpdate) {
+          queryClient.invalidateQueries({
+            queryKey: ['lesson-plan', lessonPlanId],
+          })
+        }
       },
       onError: (error) => {
         console.error('Erro ao salvar plano de aula:', error)
@@ -502,7 +728,7 @@ export function LessonPlanProvider({
     for (const axisId of axisIds) {
       const axisData = getAxisData(axisId)
 
-      if (axisData.currentQuestions.length > 0) {
+      if (axisData.isCompleted) {
         const answers = []
 
         for (const question of axisData.currentQuestions) {
@@ -539,23 +765,37 @@ export function LessonPlanProvider({
     }
 
     try {
-      console.log(metadataValues)
-      await saveLessonPlanMutation({
+      const payload = {
         title: metadataValues.title,
         description: metadataValues.description || undefined,
         subjectId: metadataValues.subjectId,
+        topicId: metadataValues.topicId,
         complexity: metadataValues.complexity,
         example: metadataValues.example,
         isPublic: metadataValues.isPublic,
         approachId,
         axes,
-      })
+        ...(shouldUpdate && { lessonPlanId }),
+      }
 
-      resetAllForms()
+      await saveLessonPlanMutation(payload)
+
+      if (shouldCreate) {
+        resetAllForms()
+      }
     } catch (error) {
       // Erro já tratado no onError
     }
-  }, [metadataForm, approachId, axisIds, getAxisData, saveLessonPlanMutation])
+  }, [
+    metadataForm,
+    approachId,
+    axisIds,
+    getAxisData,
+    saveLessonPlanMutation,
+    shouldUpdate,
+    shouldCreate,
+    lessonPlanId,
+  ])
 
   // Resetar todos os formulários
   const resetAllForms = useCallback(() => {
@@ -590,10 +830,15 @@ export function LessonPlanProvider({
     goToPreviousQuestion,
     saveLessonPlan,
     resetAllForms,
-    isSaving,
+    isSaving: isSaving || isLoadingExisting,
     isAnyFormCompleted,
     totalCompletedForms,
     totalForms: axisIds.length,
+    isEditing,
+    isOwner,
+    originalAuthorId,
+    currentUserId,
+    isDataLoaded: isDataLoaded && !isLoadingExisting,
   }
 
   return (

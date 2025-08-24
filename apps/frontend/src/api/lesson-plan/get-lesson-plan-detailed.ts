@@ -4,38 +4,54 @@ export interface GetLessonPlanDetailedParams {
   lessonPlanId: string
 }
 
-interface Axes {
-  id: string
-  lessonPlanId: string
-  axisId: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface GetHighlightsLessonResponse {
+export interface GetLessonPlanByIdResponse {
   id: string
   title: string
   description: string | null
+  subjectId: string | null
+  topicId: string | null
   complexity: string | null
   example: string | null
   isPublic: boolean
+  userId: string
   approachId: string
   createdAt: string
-  updatedAt: string
-  axes: Axes[]
-  subject: {
+  updatedAt: string | null
+
+  axes: {
     id: string
-    title: string
-  } | null
-  topic: {
-    id: string
-    title: string
-  } | null
-  user: {
+    axisId: string
+    answers: {
+      id: string
+      questionId: string
+      answerId: string
+      steps: {
+        id: string
+        title: string
+        description: string
+        order: number
+      }[]
+    }[]
+  }[]
+
+  user?: {
     id: string
     name: string
     photoURL: string
   }
+  approach?: {
+    id: string
+    title: string
+  }
+  subject?: {
+    id: string
+    title: string
+  }
+  topic?: {
+    id: string
+    title: string
+  }
+
   complexityLabel: string
   exampleLabel: string
 }
@@ -43,7 +59,7 @@ export interface GetHighlightsLessonResponse {
 export async function getLessonPlanDetailed({
   lessonPlanId,
 }: GetLessonPlanDetailedParams) {
-  const response = await api.get<GetHighlightsLessonResponse>(
+  const response = await api.get<GetLessonPlanByIdResponse>(
     `/lesson-plan/${lessonPlanId}`,
     {
       withCredentials: true,

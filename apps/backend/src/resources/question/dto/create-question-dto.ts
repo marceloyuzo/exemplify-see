@@ -47,7 +47,6 @@ export class CreateQuestionDto {
   @IsNotEmpty()
   optionB: string
 
-  // Terceira opção opcional
   @IsString()
   @IsOptional()
   optionC?: string
@@ -62,7 +61,6 @@ export class CreateQuestionDto {
   @Type(() => StepDto)
   stepsB: StepDto[] = []
 
-  // Steps da terceira opção opcional
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => StepDto)

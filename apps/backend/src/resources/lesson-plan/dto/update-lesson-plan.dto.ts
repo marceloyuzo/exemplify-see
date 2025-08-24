@@ -59,7 +59,7 @@ export class LessonPlanAxisDto {
   answers: LessonPlanAnswerDto[]
 }
 
-export class CreateLessonPlanDto {
+export class UpdateLessonPlanDto {
   @IsString()
   @IsNotEmpty()
   title: string

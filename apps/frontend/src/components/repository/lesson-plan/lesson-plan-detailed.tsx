@@ -119,7 +119,7 @@ export default function LessonPlanDetailed({
             <div className="flex items-center gap-2">
               <Avatar>
                 <AvatarImage
-                  src={lessonPlanData?.user.photoURL}
+                  src={lessonPlanData?.user?.photoURL}
                   alt="Profile image"
                 />
                 <AvatarFallback>
@@ -130,7 +130,7 @@ export default function LessonPlanDetailed({
                   />
                 </AvatarFallback>
               </Avatar>
-              <Label>{lessonPlanData?.user.name}</Label>
+              <Label>{lessonPlanData?.user?.name}</Label>
             </div>
             <div className="flex gap-2">
               <DialogClose asChild>
