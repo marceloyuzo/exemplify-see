@@ -30,6 +30,7 @@ model User {
   updatedAt   DateTime? @updatedAt @map("updated_at")
 
   lessonPlans LessonPlan[]
+  Example     Example[]
 
   @@map("users")
 }
@@ -124,24 +125,24 @@ enum Complexity {
   intermediate
 }
 
-enum Example {
+enum ExampleType {
   correct
   erroneous
 }
 
 model LessonPlan {
-  id          String      @id @default(uuid())
+  id          String       @id @default(uuid())
   title       String
   description String?
-  subjectId   String?     @map("subject_id")
-  topicId     String?     @map("topic_id")
+  subjectId   String?      @map("subject_id")
+  topicId     String?      @map("topic_id")
   complexity  Complexity?
-  example     Example?
-  isPublic    Boolean     @default(true) @map("is_public")
-  userId      String      @map("user_id")
-  approachId  String      @map("approach_id")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime?   @updatedAt @map("updated_at")
+  example     ExampleType?
+  isPublic    Boolean      @default(true) @map("is_public")
+  userId      String       @map("user_id")
+  approachId  String       @map("approach_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime?    @updatedAt @map("updated_at")
 
   user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   approach Approach         @relation(fields: [approachId], references: [id], onDelete: Cascade)
@@ -203,7 +204,7 @@ model Subject {
   title      String
   createdAt  DateTime     @default(now()) @map("created_at")
   updatedAt  DateTime?    @updatedAt @map("updated_at")
-  LessonPlan LessonPlan[]
+  lessonPlan LessonPlan[]
 
   @@map("subjects")
 }
@@ -213,7 +214,52 @@ model Topic {
   title      String
   createdAt  DateTime     @default(now()) @map("created_at")
   updatedAt  DateTime?    @updatedAt @map("updated_at")
-  LessonPlan LessonPlan[]
+  lessonPlan LessonPlan[]
+  example    Example[]
 
   @@map("topics")
+}
+
+model Example {
+  id           String         @id @default(uuid())
+  title        String
+  description  String
+  reference    String[]
+  authorId     String         @map("author_id")
+  topicId      String         @map("topic_id")
+  exampleModel ExampleModel[]
+  type         ExampleType?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  author User  @relation(fields: [authorId], references: [id])
+  topic  Topic @relation(fields: [topicId], references: [id])
+
+  @@map("examples")
+}
+
+model Model {
+  id           String         @id @default(uuid())
+  title        String
+  exampleModel ExampleModel[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("models")
+}
+
+model ExampleModel {
+  exampleId String @map("example_id")
+  modelId   String @map("model_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  example Example @relation(fields: [exampleId], references: [id])
+  model   Model   @relation(fields: [modelId], references: [id])
+
+  @@id([exampleId, modelId])
+  @@map("example_models")
 }

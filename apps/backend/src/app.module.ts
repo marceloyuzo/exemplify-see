@@ -10,6 +10,8 @@ import { QuestionModule } from './resources/question/question.module'
 import { LessonPlanModule } from './resources/lesson-plan/lesson-plan.module'
 import { SubjectModule } from './resources/subject/subject.module'
 import { TopicModule } from './resources/topic/topic.module'
+import { ModelModule } from './resources/model/model.module'
+import { ExampleModule } from './resources/example/example.module'
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { TopicModule } from './resources/topic/topic.module'
     LessonPlanModule,
     SubjectModule,
     TopicModule,
+    ModelModule,
+    ExampleModule,
   ],
   controllers: [AppController],
   providers: [],

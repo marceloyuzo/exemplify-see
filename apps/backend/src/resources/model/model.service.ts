@@ -1,25 +1,25 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/database/services/prisma.service'
 
-interface CreateSubjectProps {
+interface CreateModelProps {
   title: string
 }
 
-interface DeleteSubjectProps {
+interface DeleteModelProps {
   id: string
 }
 
-interface UpdateSubjectProps {
+interface UpdateModelProps {
   id: string
   title: string
 }
 
 @Injectable()
-export class SubjectService {
+export class ModelService {
   constructor(private prisma: PrismaService) {}
 
-  async getSubjectOptions() {
-    return await this.prisma.subject.findMany({
+  async getModelOptions() {
+    return await this.prisma.model.findMany({
       select: {
         id: true,
         title: true,
@@ -27,48 +27,48 @@ export class SubjectService {
     })
   }
 
-  async createSubject({ title }: CreateSubjectProps) {
-    const subject = await this.prisma.subject.create({
+  async createModel({ title }: CreateModelProps) {
+    const model = await this.prisma.model.create({
       data: { title },
     })
 
-    return subject
+    return model
   }
 
-  async deleteSubject({ id }: DeleteSubjectProps) {
-    const isSubjectExists = await this.prisma.subject.findUnique({
+  async deleteModel({ id }: DeleteModelProps) {
+    const isModelExists = await this.prisma.model.findUnique({
       where: {
         id,
       },
     })
 
-    if (!isSubjectExists) {
+    if (!isModelExists) {
       throw new NotFoundException(
         'Não existe uma disciplina com esse identificador.',
       )
     }
 
-    await this.prisma.subject.delete({
+    await this.prisma.model.delete({
       where: {
         id,
       },
     })
   }
 
-  async updateSubject({ id, title }: UpdateSubjectProps) {
-    const isSubjectExists = await this.prisma.subject.findUnique({
+  async updateModel({ id, title }: UpdateModelProps) {
+    const isModelExists = await this.prisma.model.findUnique({
       where: {
         id,
       },
     })
 
-    if (!isSubjectExists) {
+    if (!isModelExists) {
       throw new NotFoundException(
         'Não existe uma disciplina com esse identificador.',
       )
     }
 
-    const subject = await this.prisma.subject.update({
+    const model = await this.prisma.model.update({
       where: {
         id,
       },
@@ -77,6 +77,6 @@ export class SubjectService {
       },
     })
 
-    return subject
+    return model
   }
 }

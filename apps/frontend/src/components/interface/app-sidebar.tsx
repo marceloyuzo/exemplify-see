@@ -22,7 +22,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '#',
       icon: Folders,
       items: [
-        { title: 'Exemplos', url: '#' },
+        { title: 'Exemplos', url: '/repositorio/exemplos' },
         { title: 'Planos de Aula', url: '/repositorio/planos-de-aula' },
       ],
     },
@@ -33,9 +33,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: '#',
             icon: Settings,
             items: [
-              { title: 'Usuários', url: '/painel-administrador/usuarios' },
               { title: 'Abordagens', url: '/painel-administrador/abordagens' },
+              { title: 'Disciplina', url: '/painel-administrador/disciplinas' },
               { title: 'Exemplos', url: '/painel-administrador/exemplos' },
+              { title: 'Modelo', url: '/painel-administrador/modelos' },
+              { title: 'Tema', url: '/painel-administrador/temas' },
+              { title: 'Usuários', url: '/painel-administrador/usuarios' },
             ],
           },
         ]

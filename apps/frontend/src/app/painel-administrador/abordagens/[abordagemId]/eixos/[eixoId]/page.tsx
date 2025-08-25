@@ -266,6 +266,7 @@ export default function EixoPage() {
         </Button>
         <Breadcrumbs items={breadcrumbItems} />
       </div>
+
       <AxisEditCard
         axisId={axisId}
         error={errorAxis}

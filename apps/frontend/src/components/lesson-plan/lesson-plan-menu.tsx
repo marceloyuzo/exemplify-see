@@ -17,12 +17,6 @@ export default function LessonPlanMenu() {
 
   return (
     <div className="my-4 flex gap-4">
-      <LessonPlanSaveDialog
-        isAnyFormCompleted={isAnyFormCompleted}
-        totalCompletedForms={totalCompletedForms}
-        totalForms={totalForms}
-      />
-
       <Button variant={'outline'} onClick={resetAllForms} disabled={isSaving}>
         Limpar Plano
       </Button>
@@ -33,6 +27,12 @@ export default function LessonPlanMenu() {
       >
         Repositório de Planos
       </Button>
+
+      <LessonPlanSaveDialog
+        isAnyFormCompleted={isAnyFormCompleted}
+        totalCompletedForms={totalCompletedForms}
+        totalForms={totalForms}
+      />
 
       <Button variant={'outline'} disabled>
         Exportar Plano PDF
