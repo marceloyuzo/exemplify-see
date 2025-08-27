@@ -28,7 +28,7 @@ export default function RepositorioExemplosPage() {
         <div className="flex gap-4">
           <Button
             variant={'outline'}
-            onClick={() => router.push('/repositorio/planos-de-aula')}
+            onClick={() => router.push('/')}
             className="cursor-pointer"
           >
             Voltar

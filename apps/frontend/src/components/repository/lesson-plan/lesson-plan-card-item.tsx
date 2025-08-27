@@ -11,8 +11,7 @@ import { Label } from '@/components/ui/label'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { UserRoundIcon } from 'lucide-react'
-import { useState } from 'react'
-import LessonPlanDetailed from './lesson-plan-detailed'
+import { useRouter } from 'next/navigation'
 
 interface User {
   id: string
@@ -35,7 +34,7 @@ export default function LessonPlanCardItem({
   createdAt,
   user,
 }: LessonPlanCardItemProps) {
-  const [open, setOpen] = useState<boolean>(false)
+  const router = useRouter()
   const dateFormatted = format(new Date(createdAt), "d 'de' MMMM 'de' yyyy", {
     locale: ptBR,
   })
@@ -45,7 +44,7 @@ export default function LessonPlanCardItem({
       <Card
         className="w-full max-w-xs h-64 flex flex-col cursor-pointer transition-all duration-300 hover:scale-[1.01]"
         onClick={() => {
-          setOpen(true)
+          router.push(`/repositorio/exemplos/${id}`)
         }}
       >
         <CardHeader>
@@ -74,7 +73,6 @@ export default function LessonPlanCardItem({
           <span className="font-bold text-primary">4.5</span>
         </CardFooter>
       </Card>
-      <LessonPlanDetailed open={open} setOpen={setOpen} lessonId={id} />
     </>
   )
 }

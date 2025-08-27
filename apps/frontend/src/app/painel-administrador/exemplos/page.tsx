@@ -10,33 +10,70 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowUpDownIcon, HomeIcon, SearchIcon, Trash2Icon } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  ArrowUpDownIcon,
+  HomeIcon,
+  MoreHorizontal,
+  SearchIcon,
+} from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { DataTablePagination } from '@/components/table/pagination'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
-import { ExampleResponse, findExamples } from '@/api/example/find-examples'
 import ExampleDeleteDialog from '@/components/example/example-delete-dialog'
+import {
+  ExampleResponseAdmin,
+  findExamplesAdmin,
+} from '@/api/example/find-examples-admin'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { approveExample } from '@/api/example/approve-example'
+import axios, { AxiosError } from 'axios'
+import { toast } from 'sonner'
 
 export default function PainelExemplos() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const searchParams = useSearchParams()
   const [exampleToDelete, setExampleToDelete] =
-    useState<ExampleResponse | null>(null)
+    useState<ExampleResponseAdmin | null>(null)
   const [open, setOpen] = useState(false)
-
-  function openDeleteDialog(example: ExampleResponse) {
-    setExampleToDelete(example)
-    setOpen(true)
-  }
-
-  const [searchExample, setSearchExample] = useState('')
-
   const page = Number(searchParams.get('page')) || 1
   const perPage = Number(searchParams.get('perPage')) || 25
   const orderBy = searchParams.get('orderBy') || 'asc'
   const exampleName = searchParams.get('exampleName') || ''
+  const [searchExample, setSearchExample] = useState('')
+
+  const { data, isLoading, error, isFetching } = useQuery({
+    queryKey: ['examples-admin', page, perPage, exampleName, orderBy],
+    queryFn: () =>
+      findExamplesAdmin({
+        page,
+        perPage,
+        exampleName,
+        orderBy,
+      }),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false,
+    retry: 3,
+  })
+
+  const { mutateAsync: approveExampleAsync } = useMutation({
+    mutationFn: approveExample,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['examples-admin'],
+      })
+    },
+  })
 
   useEffect(() => {
     setSearchExample(exampleName)
@@ -69,20 +106,41 @@ export default function PainelExemplos() {
     updateURL({ orderBy: neworderBy })
   }
 
-  const { data, isLoading, error, isFetching } = useQuery({
-    queryKey: ['example', page, perPage, exampleName, orderBy],
-    queryFn: () =>
-      findExamples({
-        page,
-        perPage,
-        exampleName,
-        orderBy,
-      }),
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    refetchOnWindowFocus: false,
-    retry: 3,
-  })
+  function openDeleteDialog(example: ExampleResponseAdmin) {
+    setExampleToDelete(example)
+    setOpen(true)
+  }
+
+  async function handleApproveExample({ id }: { id: string }) {
+    try {
+      await approveExampleAsync({
+        id,
+      })
+
+      toast.success('Exemplo aprovado com sucesso.', {
+        position: 'top-center',
+        duration: 3000,
+      })
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const axiosErr = err as AxiosError<{ message: string }>
+        const message =
+          axiosErr.response?.data.message ||
+          axiosErr.message ||
+          'Erro desconhecido'
+
+        toast.error(`Aconteceu um erro ao aprovar o exemplo. ${message}`, {
+          position: 'top-center',
+          duration: 3000,
+        })
+      } else {
+        toast.error(`Erro inesperado: ${(err as Error).message}`, {
+          position: 'top-center',
+          duration: 3000,
+        })
+      }
+    }
+  }
 
   if (isLoading) {
     return (
@@ -261,6 +319,7 @@ export default function PainelExemplos() {
                 <TableHead className="h-11 ">Autor</TableHead>
                 <TableHead className="h-11 ">Criado em</TableHead>
                 <TableHead className="h-11 ">Atualizado em</TableHead>
+                <TableHead className="h-11 ">Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -301,17 +360,40 @@ export default function PainelExemplos() {
                     <TableCell className="h-11">
                       {new Date(example.updatedAt).toLocaleDateString('pt-BR')}
                     </TableCell>
+                    <TableCell className="h-11">
+                      {example.isApprove ? 'Aprovado' : 'Pendente'}
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant={'link'}
-                        className="text-secondary-foreground cursor-pointer hover:text-red-500"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          openDeleteDialog(example)
-                        }}
-                      >
-                        <Trash2Icon size={18} />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir Menu</span>
+                            <MoreHorizontal />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleApproveExample({ id: example.id })
+                            }}
+                          >
+                            Aprovar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              openDeleteDialog(example)
+                            }}
+                          >
+                            Deletar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))

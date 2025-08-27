@@ -20,7 +20,6 @@ const handleFilterExampleSchema = z.object({
   title: z.string().optional(),
   subjectId: z.string().optional(),
   topicId: z.string().optional(),
-  complexity: z.string().optional(),
   exampleType: z.string().optional(),
 })
 
@@ -38,7 +37,6 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
   const exampleNameParam = searchParams.get('exampleName') || ''
   const subjectIdParam = searchParams.get('subjectId') || ''
   const topicIdParam = searchParams.get('topicId') || ''
-  const complexityParam = searchParams.get('complexity') || ''
   const exampleParam = searchParams.get('exampleType') || ''
 
   const {
@@ -52,7 +50,6 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
       title: exampleNameParam,
       subjectId: subjectIdParam,
       topicId: topicIdParam,
-      complexity: complexityParam,
       exampleType: exampleParam,
     },
   })
@@ -62,7 +59,6 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
   const exampleName = watch('title')
   const subjectId = watch('subjectId')
   const topicId = watch('topicId')
-  const complexity = watch('complexity')
   const exampleType = watch('exampleType')
 
   const [debouncedExampleName] = useDebounce(exampleName, 500)
@@ -96,7 +92,6 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
       title: exampleNameParam,
       subjectId: subjectIdParam,
       topicId: topicIdParam,
-      complexity: complexityParam,
       exampleType: exampleParam,
     }
 
@@ -104,7 +99,6 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
       title: exampleName || '',
       subjectId: subjectId || '',
       topicId: topicId || '',
-      complexity: complexity || '',
       exampleType: exampleType || '',
     }
 
@@ -119,20 +113,12 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
       setValue('title', urlValues.title)
       setValue('subjectId', urlValues.subjectId)
       setValue('topicId', urlValues.topicId)
-      setValue('complexity', urlValues.complexity)
       setValue('exampleType', urlValues.exampleType)
       setTimeout(() => {
         isUpdatingFromURL.current = false
       }, 100)
     }
-  }, [
-    exampleNameParam,
-    subjectIdParam,
-    topicIdParam,
-    complexityParam,
-    exampleParam,
-    setValue,
-  ])
+  }, [exampleNameParam, subjectIdParam, topicIdParam, exampleParam, setValue])
 
   useEffect(() => {
     if (isUpdatingFromURL.current) return
@@ -141,19 +127,11 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
       exampleName: debouncedExampleName || '',
       subjectId: subjectId || '',
       topicId: topicId || '',
-      complexity: complexity || '',
       exampleType: exampleType || '',
     }
 
     updateURL(currentFilters)
-  }, [
-    debouncedExampleName,
-    subjectId,
-    topicId,
-    complexity,
-    exampleType,
-    updateURL,
-  ])
+  }, [debouncedExampleName, subjectId, topicId, exampleType, updateURL])
 
   function handleSortToggle() {
     const neworderBy = orderBy === 'asc' ? 'desc' : 'asc'
@@ -167,14 +145,13 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
     isFetching: examplesIsFetching,
   } = useQuery({
     queryKey: [
-      'lesson-plans-list',
+      'examples',
       page,
       perPage,
       debouncedExampleName,
       orderBy,
       subjectId,
       topicId,
-      complexity,
       exampleType,
       myLessons,
     ],
@@ -286,7 +263,7 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="relative">
             <InputAnimated
-              label="Título do Plano de Aula"
+              label="Título do Exemplo"
               value={exampleName}
               onChange={(e) => setValue('title', e.target.value)}
               className="w-64"
@@ -314,26 +291,6 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
                   error={errors.topicId}
                   clearable={true}
                   onClear={() => setValue('topicId', '')}
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="complexity"
-              render={({ field }) => (
-                <SelectOverlapping
-                  className="w-full max-w-[200px]"
-                  label="Nível de Complexidade"
-                  options={[
-                    { label: 'Iniciante', value: 'beginner' },
-                    { label: 'Intermediário', value: 'intermediate' },
-                  ]}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  error={errors.complexity}
-                  clearable={true}
-                  onClear={() => setValue('complexity', '')}
                 />
               )}
             />
@@ -369,6 +326,11 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
               <ArrowUpDownIcon className="h-4 w-4" />
               Data de Criação
               {orderBy === 'desc' ? ' ↓' : ' ↑'}
+            </Button>
+            <Button
+              onClick={() => router.push('/repositorio/exemplos/adicionar')}
+            >
+              Adicionar Exemplo
             </Button>
           </div>
         </div>

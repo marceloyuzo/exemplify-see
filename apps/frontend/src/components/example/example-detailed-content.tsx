@@ -2,10 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface ExampleDetailedContentProps {
   description: string
+  references: string[]
 }
 
 export default function ExampleDetailedContent({
   description,
+  references,
 }: ExampleDetailedContentProps) {
   return (
     <Card className="w-full col-span-3 flex flex-col">
@@ -25,7 +27,9 @@ export default function ExampleDetailedContent({
           <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
             Referências
           </h4>
-          <span></span>
+          {references.map((reference, index) => (
+            <span key={index}>{reference}</span>
+          ))}
         </div>
         <div>
           <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">

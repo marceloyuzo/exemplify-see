@@ -75,11 +75,15 @@ export default function ExampleDetailedPage() {
       />
 
       <div className="mt-2 grid grid-cols-4 gap-2 flex-1">
-        <ExampleDetailedContent description={exampleData.description} />
+        <ExampleDetailedContent
+          description={exampleData.description}
+          references={exampleData.references}
+        />
         <ExampleDetailedMetadata
           user={exampleData.author}
           exampleType={exampleData.type}
           topic={exampleData.topic.title}
+          exampleModel={exampleData.exampleModel}
         />
       </div>
     </div>

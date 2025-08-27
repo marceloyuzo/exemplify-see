@@ -50,6 +50,28 @@ async function main() {
     })
   }
 
+  const modelTitles = [
+    'Diagrama de Classes',
+    'Diagrama de Objetos',
+    'Diagrama de Componentes',
+    'Diagrama de Pacotes',
+    'Diagrama de Estrutura Composta',
+    'Diagrama de Implantação (Deployment)',
+    'Diagrama de Caso de Uso',
+    'Diagrama de Sequência',
+    'Diagrama de Comunicação',
+    'Diagrama de Estados (State Machine)',
+    'Diagrama de Atividades',
+    'Diagrama de Interação Geral (Interaction Overview)',
+    'Diagrama de Tempo (Timing Diagram)',
+  ]
+
+  for (const title of modelTitles) {
+    await prisma.model.create({
+      data: { title },
+    })
+  }
+
   console.log('🎉 Seed concluído!')
 }
 

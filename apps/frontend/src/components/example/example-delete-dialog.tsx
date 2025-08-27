@@ -13,14 +13,14 @@ import { Button } from '../ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import axios, { AxiosError } from 'axios'
-import { ExampleResponse } from '@/api/example/find-examples'
 import { deleteExample, DeleteExampleProps } from '@/api/example/delete-example'
+import { ExampleResponseAdmin } from '@/api/example/find-examples-admin'
 
 interface ExampleDeleteDialogProps {
-  exampleToDelete: ExampleResponse | null
+  exampleToDelete: ExampleResponseAdmin | null
   open: boolean
   setOpen: Dispatch<SetStateAction<boolean>>
-  setExampleToDelete: Dispatch<SetStateAction<ExampleResponse | null>>
+  setExampleToDelete: Dispatch<SetStateAction<ExampleResponseAdmin | null>>
 }
 
 export default function ExampleDeleteDialog({

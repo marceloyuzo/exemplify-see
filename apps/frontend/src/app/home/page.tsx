@@ -3,8 +3,29 @@
 import About from '@/components/home/about'
 import FeatureCard from '@/components/home/feature-card'
 import { Button } from '@/components/ui/button'
+import { useUser } from '@/hooks/use-user'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
+  const user = useUser()
+  const router = useRouter()
+
+  function handleStart() {
+    if (user) {
+      router.push('/plano-de-aula')
+    } else {
+      router.push('/login')
+    }
+  }
+
+  const handleAbout = () => {
+    const section = document.getElementById('sobre')
+    if (section) {
+      const top = section.getBoundingClientRect().top + window.scrollY
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }
+
   return (
     <>
       <section className="flex w-full min-h-[calc(100vh-160px)]">
@@ -24,6 +45,7 @@ export default function Home() {
               variant={'outline'}
               className="cursor-pointer rounded-2xl"
               size={'lg'}
+              onClick={() => handleAbout()}
             >
               Saber mais
             </Button>
@@ -31,6 +53,7 @@ export default function Home() {
             <Button
               className="cursor-pointer rounded-2xl px-6 bg-[linear-gradient(to_right,var(--primary),var(--secondary))] "
               size={'lg'}
+              onClick={() => handleStart()}
             >
               Começar
             </Button>
@@ -42,7 +65,10 @@ export default function Home() {
         <FeatureCard />
         <FeatureCard />
       </section>
-      <section className="min-h-screen flex justify-around items-center">
+      <section
+        className="min-h-screen flex justify-around items-center"
+        id="sobre"
+      >
         <About />
       </section>
     </>

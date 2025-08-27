@@ -224,17 +224,18 @@ model Example {
   id           String         @id @default(uuid())
   title        String
   description  String
-  reference    String[]
-  authorId     String         @map("author_id")
+  references   String[]
   topicId      String         @map("topic_id")
+  authorId     String         @map("author_id")
+  isApprove    Boolean        @map("is_approve")
   exampleModel ExampleModel[]
-  type         ExampleType?
+  type         ExampleType
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
-  author User  @relation(fields: [authorId], references: [id])
   topic  Topic @relation(fields: [topicId], references: [id])
+  author User  @relation(fields: [authorId], references: [id])
 
   @@map("examples")
 }
