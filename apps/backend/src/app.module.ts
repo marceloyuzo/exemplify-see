@@ -12,6 +12,7 @@ import { SubjectModule } from './resources/subject/subject.module'
 import { TopicModule } from './resources/topic/topic.module'
 import { ModelModule } from './resources/model/model.module'
 import { ExampleModule } from './resources/example/example.module'
+import { RatingModule } from './resources/rating/rating.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ExampleModule } from './resources/example/example.module'
     TopicModule,
     ModelModule,
     ExampleModule,
+    RatingModule,
   ],
   controllers: [AppController],
   providers: [],

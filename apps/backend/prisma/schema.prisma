@@ -31,6 +31,7 @@ model User {
 
   lessonPlans LessonPlan[]
   Example     Example[]
+  Rating      Rating[]
 
   @@map("users")
 }
@@ -234,8 +235,9 @@ model Example {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
-  topic  Topic @relation(fields: [topicId], references: [id])
-  author User  @relation(fields: [authorId], references: [id])
+  topic  Topic    @relation(fields: [topicId], references: [id])
+  author User     @relation(fields: [authorId], references: [id])
+  Rating Rating[]
 
   @@map("examples")
 }
@@ -263,4 +265,21 @@ model ExampleModel {
 
   @@id([exampleId, modelId])
   @@map("example_models")
+}
+
+model Rating {
+  id        String  @id @default(uuid())
+  comment   String?
+  rate      Int
+  exampleId String  @map("example_id")
+  userId    String  @map("user_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  example Example @relation(fields: [exampleId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, exampleId])
+  @@map("ratings")
 }

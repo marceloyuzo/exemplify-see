@@ -16,6 +16,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const menuData = [
     { title: 'Início', url: '/', icon: HomeIcon },
+    { title: 'Etapas da Abordagem', url: '/etapas-da-abordagem', icon: Frame },
     { title: 'Plano de Aula', url: '/plano-de-aula', icon: Frame },
     {
       title: 'Repositório',
