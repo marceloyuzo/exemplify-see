@@ -129,27 +129,42 @@ enum Complexity {
 enum ExampleType {
   correct
   erroneous
+  both
+}
+
+enum ModatilyType {
+  inPerson
+  hybrid
+  remote
 }
 
 model LessonPlan {
-  id          String       @id @default(uuid())
-  title       String
-  description String?
-  subjectId   String?      @map("subject_id")
-  topicId     String?      @map("topic_id")
-  complexity  Complexity?
-  example     ExampleType?
-  isPublic    Boolean      @default(true) @map("is_public")
-  userId      String       @map("user_id")
-  approachId  String       @map("approach_id")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime?    @updatedAt @map("updated_at")
+  id             String       @id @default(uuid())
+  title          String
+  description    String?
+  subjectId      String       @map("subject_id")
+  topicId        String?      @map("topic_id")
+  complexity     Complexity?
+  example        ExampleType?
+  year           String
+  workload       String
+  modality       ModatilyType
+  contents       String[]
+  materials      String[]
+  priorKnowledge String?      @map("prior_knowledge")
+
+  isPublic   Boolean   @default(true) @map("is_public")
+  userId     String    @map("user_id")
+  approachId String    @map("approach_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
 
   user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   approach Approach         @relation(fields: [approachId], references: [id], onDelete: Cascade)
   subject  Subject?         @relation(fields: [subjectId], references: [id])
   topic    Topic?           @relation(fields: [topicId], references: [id])
   axes     LessonPlanAxis[]
+  Rating   Rating[]
 
   @@map("lesson_plans")
 }
@@ -269,19 +284,22 @@ model ExampleModel {
 }
 
 model Rating {
-  id        String  @id @default(uuid())
-  comment   String?
-  rate      Int
-  exampleId String  @map("example_id")
-  userId    String  @map("user_id")
+  id           String  @id @default(uuid())
+  comment      String?
+  rate         Int
+  lessonPlanId String? @map("lesson_plan_id")
+  exampleId    String? @map("example_id")
+  userId       String  @map("user_id")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
-  example Example @relation(fields: [exampleId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  example    Example?    @relation(fields: [exampleId], references: [id])
+  lessonPlan LessonPlan? @relation(fields: [lessonPlanId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
 
   @@unique([userId, exampleId])
+  @@unique([userId, lessonPlanId])
   @@map("ratings")
 }
 

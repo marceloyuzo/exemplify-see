@@ -23,6 +23,12 @@ export interface CreateLessonPlanProps {
   subjectId?: string
   topicId?: string
   complexity?: string
+  year: string
+  workload: string
+  modality: string
+  contents: string[]
+  materials: string[]
+  priorKnowledge?: string
   example?: string
   isPublic: boolean
   approachId: string
@@ -36,6 +42,12 @@ export async function createLessonPlan({
   axes,
   isPublic,
   complexity,
+  contents,
+  materials,
+  modality,
+  workload,
+  year,
+  priorKnowledge,
   example,
   subjectId,
   topicId,
@@ -49,6 +61,12 @@ export async function createLessonPlan({
       axes,
       isPublic,
       complexity,
+      contents,
+      materials,
+      modality,
+      workload,
+      year,
+      priorKnowledge,
       example,
       subjectId,
       topicId,

@@ -5,12 +5,17 @@ import {
 } from '@nestjs/common'
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
 import { PrismaService } from 'src/database/services/prisma.service'
-import { Prisma } from '@prisma/client'
+import { Prisma, User } from '@prisma/client'
 import { UpdateLessonPlanDto } from './dto/update-lesson-plan.dto'
 
 interface GetHighlightsLessonPlansProps {
   userId: string
   myRepository: boolean
+}
+
+interface DeleteLessonPlanProps {
+  user: User
+  lessonPlanId: string
 }
 
 interface FindManyLessonPlanProps {
@@ -44,12 +49,24 @@ export class LessonPlanService {
       example,
       subjectId,
       topicId,
+      contents,
+      materials,
+      modality,
+      workload,
+      year,
+      priorKnowledge,
     } = createLessonPlanDto
 
     return await this.prisma.$transaction(async (prisma) => {
       // Criar o plano de aula principal
       const lessonPlan = await prisma.lessonPlan.create({
         data: {
+          modality,
+          workload,
+          year,
+          contents,
+          materials,
+          priorKnowledge,
           title,
           description,
           userId,
@@ -96,6 +113,32 @@ export class LessonPlanService {
       }
 
       return lessonPlan
+    })
+  }
+
+  async deleteLessonPlan({ lessonPlanId, user }: DeleteLessonPlanProps) {
+    const isLessonPlanExists = await this.prisma.lessonPlan.findUnique({
+      where: {
+        id: lessonPlanId,
+      },
+    })
+
+    if (!isLessonPlanExists) {
+      throw new NotFoundException(
+        'Não existe um plano de aula com esse identificador.',
+      )
+    }
+
+    if (user.role !== 'admin' && isLessonPlanExists.userId !== user.id) {
+      throw new UnauthorizedException(
+        'Você não possui permissão para realizar essa operação.',
+      )
+    }
+
+    return await this.prisma.lessonPlan.delete({
+      where: {
+        id: lessonPlanId,
+      },
     })
   }
 
@@ -205,6 +248,12 @@ export class LessonPlanService {
       erroneous: 'Errado',
     }
 
+    const modalityLabelMap = {
+      inPerson: 'Presencial',
+      hybrid: 'Híbrido',
+      remote: 'Remoto',
+    }
+
     return {
       ...lessonPlan,
       complexityLabel: lessonPlan.complexity
@@ -212,6 +261,9 @@ export class LessonPlanService {
         : null,
       exampleLabel: lessonPlan.example
         ? exampleLabelMap[lessonPlan.example]
+        : null,
+      modalityLabel: lessonPlan.modality
+        ? modalityLabelMap[lessonPlan.modality]
         : null,
     }
   }

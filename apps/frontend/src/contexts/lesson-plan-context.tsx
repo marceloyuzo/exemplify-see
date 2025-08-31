@@ -27,10 +27,20 @@ import { useRouter, useSearchParams } from 'next/navigation'
 const lessonPlanMetadataSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().optional(),
-  subjectId: z.string().optional(),
-  topicId: z.string().optional(),
+  subjectId: z.string().min(1, 'Disciplina é obrigatório'),
+  topicId: z.string().min(1, 'Tema é obrigatório'),
   complexity: z.string().optional(),
   example: z.string().optional(),
+  year: z.string().min(1, 'Ano/Semestre é obrigatório'),
+  workload: z.string().min(1, 'Carga horária é obrigatório'),
+  modality: z.string().min(1, 'Modalidade é obrigatório'),
+  contents: z
+    .array(z.string().min(1, 'O valor do conteúdo é obrigatório.'))
+    .min(1, 'Pelo menos um conteúdo é obrigatória.'),
+  materials: z
+    .array(z.string().min(1, 'O valor do conteúdo é obrigatório.'))
+    .min(1, 'Pelo menos um conteúdo é obrigatória.'),
+  priorKnowledge: z.string().optional(),
   isPublic: z.boolean(),
 })
 
@@ -145,7 +155,11 @@ export function LessonPlanProvider({
     defaultValues: {
       title: '',
       description: '',
+      subjectId: '',
+      topicId: '',
       isPublic: false,
+      contents: [''],
+      materials: [''],
     },
   })
 
@@ -253,6 +267,12 @@ export function LessonPlanProvider({
         complexity: existingLessonPlan.complexity || undefined,
         example: existingLessonPlan.example || undefined,
         isPublic: existingLessonPlan.isPublic,
+        contents: existingLessonPlan.contents,
+        materials: existingLessonPlan.materials,
+        modality: existingLessonPlan.modality,
+        priorKnowledge: existingLessonPlan.priorKnowledge || undefined,
+        workload: existingLessonPlan.workload,
+        year: existingLessonPlan.year,
       })
 
       // Carregar respostas das perguntas
@@ -771,6 +791,12 @@ export function LessonPlanProvider({
         subjectId: metadataValues.subjectId,
         topicId: metadataValues.topicId,
         complexity: metadataValues.complexity,
+        year: metadataValues.year,
+        workload: metadataValues.workload,
+        modality: metadataValues.modality,
+        contents: metadataValues.contents,
+        materials: metadataValues.materials,
+        priorKnowledge: metadataValues.priorKnowledge,
         example: metadataValues.example,
         isPublic: metadataValues.isPublic,
         approachId,

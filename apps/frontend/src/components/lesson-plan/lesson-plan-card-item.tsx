@@ -44,7 +44,7 @@ export default function LessonPlanCardItem({
       <Card
         className="w-full max-w-xs h-64 flex flex-col cursor-pointer transition-all duration-300 hover:scale-[1.01]"
         onClick={() => {
-          router.push(`/repositorio/exemplos/${id}`)
+          router.push(`/repositorio/planos-de-aula/${id}`)
         }}
       >
         <CardHeader>

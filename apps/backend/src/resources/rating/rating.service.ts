@@ -7,7 +7,8 @@ import {
 import { PrismaService } from 'src/database/services/prisma.service'
 
 interface RateExampleProps {
-  exampleId: string
+  exampleId?: string
+  lessonPlanId?: string
   userId: string
   rate: number
   comment?: string
@@ -28,48 +29,100 @@ interface DeleteRatingProps {
 export class RatingService {
   constructor(private prisma: PrismaService) {}
 
-  async ratingExample({ comment, exampleId, rate, userId }: RateExampleProps) {
-    const isExampleExists = await this.prisma.example.findUnique({
-      where: {
-        id: exampleId,
-      },
-    })
-
-    if (!isExampleExists) {
-      throw new NotFoundException(
-        'Não existe um exemplo com esse identificador.',
-      )
-    }
-
-    const isUserAlreadyRated = await this.prisma.rating.findUnique({
-      where: {
-        userId_exampleId: {
-          exampleId,
-          userId,
-        },
-      },
-    })
-
-    if (isUserAlreadyRated) {
-      throw new ConflictException(
-        'Apenas uma avaliação por usuário em um exemplo.',
-      )
+  async rating({
+    comment,
+    exampleId,
+    lessonPlanId,
+    rate,
+    userId,
+  }: RateExampleProps) {
+    if (exampleId && lessonPlanId) {
+      throw new ConflictException('Payload incorreto.')
     }
 
     if (rate < 1 || rate > 10) {
       throw new ConflictException('A avaliação aceita apenas de 1 a 10.')
     }
 
-    const rating = await this.prisma.rating.create({
-      data: {
-        rate,
-        comment,
-        exampleId,
-        userId,
-      },
-    })
+    if (exampleId) {
+      const isExampleExists = await this.prisma.example.findUnique({
+        where: {
+          id: exampleId,
+        },
+      })
 
-    return rating
+      if (!isExampleExists) {
+        throw new NotFoundException(
+          'Não existe um exemplo com esse identificador.',
+        )
+      }
+
+      const isUserAlreadyRated = await this.prisma.rating.findUnique({
+        where: {
+          userId_exampleId: {
+            exampleId,
+            userId,
+          },
+        },
+      })
+
+      if (isUserAlreadyRated) {
+        throw new ConflictException(
+          'Apenas uma avaliação por usuário em um exemplo.',
+        )
+      }
+
+      const rating = await this.prisma.rating.create({
+        data: {
+          rate,
+          comment,
+          exampleId,
+          userId,
+        },
+      })
+
+      return rating
+    }
+
+    if (lessonPlanId) {
+      const isLessonPlanExists = await this.prisma.lessonPlan.findUnique({
+        where: {
+          id: lessonPlanId,
+        },
+      })
+
+      if (!isLessonPlanExists) {
+        throw new NotFoundException(
+          'Não existe um plano de aula com esse identificador.',
+        )
+      }
+
+      const isUserAlreadyRated = await this.prisma.rating.findUnique({
+        where: {
+          userId_lessonPlanId: {
+            lessonPlanId,
+            userId,
+          },
+        },
+      })
+
+      if (isUserAlreadyRated) {
+        throw new ConflictException(
+          'Apenas uma avaliação por usuário em um plano de aula.',
+        )
+      }
+
+      const rating = await this.prisma.rating.create({
+        data: {
+          rate,
+          comment,
+          lessonPlanId,
+          userId,
+        },
+      })
+
+      return rating
+    }
   }
 
   async findRatings({ exampleId, page, perPage }: FindRatingsProps) {

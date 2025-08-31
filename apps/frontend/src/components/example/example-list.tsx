@@ -13,7 +13,7 @@ import { SelectOverlapping } from '@/components/ui/select-overlapping'
 import { getTopicOptions } from '@/api/topic/get-topic-options'
 import { InputAnimated } from '@/components/ui/input-animated'
 import { useDebounce } from 'use-debounce'
-import ExampleCardItem from '@/components/repository/lesson-plan/lesson-plan-card-item'
+import ExampleCardItem from '@/components/lesson-plan/lesson-plan-card-item'
 import { findExamples } from '@/api/example/find-examples'
 
 const handleFilterExampleSchema = z.object({

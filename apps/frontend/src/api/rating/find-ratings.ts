@@ -3,7 +3,8 @@ import { api } from '@/lib/axios'
 interface FindRatingsParams {
   page: number
   perPage: number
-  exampleId: string
+  exampleId?: string
+  lessonPlanId?: string
 }
 
 export interface CreateRatingResponse {
@@ -30,12 +31,14 @@ export async function findRatings({
   page,
   perPage,
   exampleId,
+  lessonPlanId,
 }: FindRatingsParams) {
   const response = await api.get<CreateRatingResponse>('/rating', {
     params: {
       page,
       perPage,
       exampleId,
+      lessonPlanId,
     },
     withCredentials: true,
   })

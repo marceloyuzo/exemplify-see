@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { HomeIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
-import LessonPlanList from '@/components/repository/lesson-plan/lesson-plan-list'
+import LessonPlanList from '@/components/lesson-plan/lesson-plan-list'
 
 export default function PlanosComunidadePage() {
   const router = useRouter()

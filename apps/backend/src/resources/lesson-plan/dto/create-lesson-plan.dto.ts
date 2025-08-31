@@ -18,6 +18,13 @@ export enum Complexity {
 export enum Example {
   correct = 'correct',
   erroneous = 'erroneous',
+  both = 'both',
+}
+
+export enum ModalityType {
+  inPerson = 'inPerson',
+  hybrid = 'hybrid',
+  remote = 'remote',
 }
 
 export class LessonPlanStepDto {
@@ -69,8 +76,7 @@ export class CreateLessonPlanDto {
   description?: string
 
   @IsUUID()
-  @IsOptional()
-  subjectId?: string
+  subjectId: string
 
   @IsUUID()
   @IsOptional()
@@ -79,6 +85,30 @@ export class CreateLessonPlanDto {
   @IsEnum(Complexity)
   @IsOptional()
   complexity?: Complexity
+
+  @IsEnum(ModalityType)
+  @IsNotEmpty()
+  modality: ModalityType
+
+  @IsString()
+  @IsNotEmpty()
+  workload: string
+
+  @IsString()
+  @IsNotEmpty()
+  year: string
+
+  @IsArray()
+  @IsString({ each: true })
+  contents: string[]
+
+  @IsArray()
+  @IsString({ each: true })
+  materials: string[]
+
+  @IsString()
+  @IsOptional()
+  priorKnowledge?: string
 
   @IsEnum(Example)
   @IsOptional()

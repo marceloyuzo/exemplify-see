@@ -1,10 +1,6 @@
 'use client'
 
-import { getExampleDetailed } from '@/api/example/get-example-detailed'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
-import ExampleDetailedContent from '@/components/example/example-detailed-content'
-import ExampleDetailedHeader from '@/components/example/example-detailed-header'
-import ExampleDetailedMetadata from '@/components/example/example-detailed-metadata'
 import { Button } from '@/components/ui/button'
 import { useSingleParam } from '@/utils/single-param'
 import { useQuery } from '@tanstack/react-query'
@@ -13,29 +9,36 @@ import { ptBR } from 'date-fns/locale'
 import { HomeIcon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useUser } from '@/hooks/use-user'
-import ExampleDeleteDialog from '@/components/example/example-delete-dialog'
 import { useState } from 'react'
+import { getLessonPlanDetailed } from '@/api/lesson-plan/get-lesson-plan-detailed'
+import LessonPlanDetailedHeader from '@/components/lesson-plan/lesson-plan-detailed-header'
+import LessonPlanDetailedContent from '@/components/lesson-plan/lesson-plan-detailed-content'
+import LessonPlanDetailedMetadata from '@/components/lesson-plan/lesson-plan-detailed-metadata'
+import LessonPlanDeleteDialog from '@/components/lesson-plan/lesson-plan-dialogs/lesson-plan-delete-dialog'
 
 export default function ExampleDetailedPage() {
   const router = useRouter()
   const params = useParams()
-  const exampleId = useSingleParam(params.exemploId)
+  const lessonId = useSingleParam(params.planoId)
   const { user } = useUser()
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false)
 
   const {
-    data: exampleData,
+    data: lessonPlanData,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['example', exampleId],
+    queryKey: ['lesson-plan', lessonId],
     queryFn: () =>
-      getExampleDetailed({
-        exampleId,
+      getLessonPlanDetailed({
+        lessonPlanId: lessonId,
       }),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false,
   })
 
-  if (!exampleData) {
+  if (!lessonPlanData) {
     return
   }
 
@@ -47,7 +50,7 @@ export default function ExampleDetailedPage() {
     )
   }
 
-  if (isError || !exampleData) {
+  if (isError || !lessonPlanData) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-164px)] text-red-500">
         Ocorreu um erro ao carregar o exemplo.
@@ -55,14 +58,14 @@ export default function ExampleDetailedPage() {
     )
   }
 
-  const createdAtFormatted = exampleData?.createdAt
-    ? format(new Date(exampleData.createdAt), "d 'de' MMMM 'de' yyyy", {
+  const createdAtFormatted = lessonPlanData?.createdAt
+    ? format(new Date(lessonPlanData.createdAt), "d 'de' MMMM 'de' yyyy", {
         locale: ptBR,
       })
     : ''
 
-  const updatedAtFormatted = exampleData?.updatedAt
-    ? format(new Date(exampleData.updatedAt), "d 'de' MMMM 'de' yyyy", {
+  const updatedAtFormatted = lessonPlanData?.updatedAt
+    ? format(new Date(lessonPlanData.updatedAt), "d 'de' MMMM 'de' yyyy", {
         locale: ptBR,
       })
     : ''
@@ -74,8 +77,8 @@ export default function ExampleDetailedPage() {
       icon: <HomeIcon size={16} aria-hidden="true" />,
     },
     { label: 'Repositório', href: '#' },
-    { label: 'Exemplos', href: '/repositorio/exemplos' },
-    { label: exampleData?.title || 'Carregando...', isCurrent: true },
+    { label: 'Planos de Aula', href: '/repositorio/planos-de-aula' },
+    { label: lessonPlanData?.title || 'Carregando...', isCurrent: true },
   ]
 
   return (
@@ -84,7 +87,7 @@ export default function ExampleDetailedPage() {
         <div className="flex gap-4">
           <Button
             variant={'outline'}
-            onClick={() => router.push('/repositorio/exemplos')}
+            onClick={() => router.push('/repositorio/planos-de-aula')}
             className="cursor-pointer"
           >
             Voltar
@@ -93,7 +96,7 @@ export default function ExampleDetailedPage() {
         </div>
       </section>
 
-      {user?.id === exampleData.author.id && (
+      {user?.id === lessonPlanData.user?.id && (
         <div className="mb-4 flex gap-4 justify-end">
           <Button
             variant={'destructive'}
@@ -101,33 +104,38 @@ export default function ExampleDetailedPage() {
           >
             Excluir Exemplo
           </Button>
-          <ExampleDeleteDialog
-            exampleToDelete={exampleData}
+          <LessonPlanDeleteDialog
+            lessonPlanId={lessonId}
             open={openDeleteDialog}
             setOpen={setOpenDeleteDialog}
           />
-
-          <Button variant={'outline'}>Editar Exemplo</Button>
         </div>
       )}
 
-      <ExampleDetailedHeader
-        title={exampleData.title}
-        rating={exampleData.averageRating}
+      <LessonPlanDetailedHeader
+        title={lessonPlanData.title}
         createdAt={createdAtFormatted}
         updatedAt={updatedAtFormatted}
+        rating={4}
       />
+
       <div className="mt-2 grid grid-cols-4 gap-2 flex-1">
-        <ExampleDetailedContent
-          description={exampleData.description}
-          references={exampleData.references}
-          attachments={exampleData.attachment}
+        <LessonPlanDetailedContent
+          description={lessonPlanData.description}
+          contents={lessonPlanData.contents}
+          materials={lessonPlanData.materials}
+          priorKnowledge={lessonPlanData.priorKnowledge}
         />
-        <ExampleDetailedMetadata
-          user={exampleData.author}
-          exampleType={exampleData.type}
-          topic={exampleData.topic.title}
-          exampleModel={exampleData.exampleModel}
+
+        <LessonPlanDetailedMetadata
+          user={lessonPlanData.user}
+          topic={lessonPlanData.topic?.title}
+          exampleType={lessonPlanData.exampleLabel}
+          complexity={lessonPlanData.complexityLabel}
+          subject={lessonPlanData.subject?.title}
+          modality={lessonPlanData.modalityLabel}
+          workload={lessonPlanData.workload}
+          year={lessonPlanData.year}
         />
       </div>
     </div>

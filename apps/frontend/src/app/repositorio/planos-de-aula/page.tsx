@@ -1,7 +1,7 @@
 'use client'
 
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
-import LessonPlanCardList from '@/components/repository/lesson-plan/lesson-plan-card-list'
+import LessonPlanCardList from '@/components/lesson-plan/lesson-plan-card-list'
 import { Button } from '@/components/ui/button'
 import { HomeIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'

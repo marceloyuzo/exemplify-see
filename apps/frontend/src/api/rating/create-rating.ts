@@ -1,19 +1,23 @@
 import { api } from '@/lib/axios'
 
 interface CreateRatingBody {
-  exampleId: string
+  exampleId?: string
+  lessonPlanId?: string
   rate: number
   comment?: string
 }
 
 export async function createRating({
   exampleId,
+  lessonPlanId,
   rate,
   comment,
 }: CreateRatingBody) {
   const response = await api.post(
-    `/rating/example/${exampleId}`,
+    `/rating`,
     {
+      exampleId,
+      lessonPlanId,
       rate,
       comment,
     },

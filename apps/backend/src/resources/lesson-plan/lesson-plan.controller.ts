@@ -8,6 +8,7 @@ import {
   Request,
   Query,
   Patch,
+  Delete,
 } from '@nestjs/common'
 import { LessonPlanService } from './lesson-plan.service'
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
@@ -47,6 +48,25 @@ export class LessonPlanController {
       example: body.example,
       subjectId: body.subjectId,
       topicId: body.topicId,
+      contents: body.contents,
+      materials: body.materials,
+      modality: body.modality,
+      workload: body.workload,
+      year: body.year,
+      priorKnowledge: body.priorKnowledge,
+    })
+  }
+
+  @Delete('/:id')
+  async deleteLessonPlan(
+    @Param('id') id: string,
+    @Request() req: Request & { user: User },
+  ) {
+    const user = req.user
+
+    return await this.lessonPlanService.deleteLessonPlan({
+      user,
+      lessonPlanId: id,
     })
   }
 
@@ -73,7 +93,6 @@ export class LessonPlanController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   async findApproaches(
     @Request() req: Request & { user: User },
     @Query('page') page: string = '1',

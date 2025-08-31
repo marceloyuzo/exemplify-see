@@ -12,6 +12,12 @@ export interface GetLessonPlanByIdResponse {
   topicId: string | null
   complexity: string | null
   example: string | null
+  year: string
+  workload: string
+  modality: string
+  contents: string[]
+  materials: string[]
+  priorKnowledge?: string
   isPublic: boolean
   userId: string
   approachId: string
@@ -54,6 +60,7 @@ export interface GetLessonPlanByIdResponse {
 
   complexityLabel: string
   exampleLabel: string
+  modalityLabel: string
 }
 
 export async function getLessonPlanDetailed({

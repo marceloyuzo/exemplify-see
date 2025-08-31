@@ -2,12 +2,17 @@ import { api } from '@/lib/axios'
 import { LessonPlanAxis } from './create-lesson-plan'
 
 interface UpdateLessonPlanProps {
-  lessonPlanId?: string
   title: string
   description?: string
   subjectId?: string
   topicId?: string
   complexity?: string
+  year: string
+  workload: string
+  modality: string
+  contents: string[]
+  materials: string[]
+  priorKnowledge?: string
   example?: string
   isPublic: boolean
   approachId: string
@@ -22,6 +27,12 @@ export async function updateLessonPlan({
   axes,
   isPublic,
   complexity,
+  contents,
+  materials,
+  modality,
+  workload,
+  year,
+  priorKnowledge,
   example,
   subjectId,
   topicId,
@@ -35,6 +46,12 @@ export async function updateLessonPlan({
       axes,
       isPublic,
       complexity,
+      contents,
+      materials,
+      modality,
+      workload,
+      year,
+      priorKnowledge,
       example,
       subjectId,
       topicId,

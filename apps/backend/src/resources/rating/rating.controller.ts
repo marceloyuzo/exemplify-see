@@ -18,18 +18,18 @@ import { User } from '@prisma/client'
 export class RatingController {
   constructor(private ratingService: RatingService) {}
 
-  @Post('/example/:id')
+  @Post()
   @UseGuards(JwtAuthGuard)
-  async rateExample(
-    @Param('id') id: string,
-    @Body() { rate, comment }: RateExampleDTO,
+  async rate(
+    @Body() { rate, comment, exampleId, lessonPlanId }: RateExampleDTO,
     @Request() req: Request & { user: User },
   ) {
     const user = req.user
 
-    return await this.ratingService.ratingExample({
+    return await this.ratingService.rating({
       comment,
-      exampleId: id,
+      exampleId,
+      lessonPlanId,
       rate,
       userId: user.id,
     })

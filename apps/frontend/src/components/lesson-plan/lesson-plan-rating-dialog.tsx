@@ -26,18 +26,21 @@ const addRatingSchema = z.object({
 
 type AddRatingSchemaType = z.infer<typeof addRatingSchema>
 
-interface RatingDialogProps {
+interface LessonPlanRatingDialogProps {
   open: boolean
   setOpen: Dispatch<SetStateAction<boolean>>
 }
 
-export default function RatingDialog({ open, setOpen }: RatingDialogProps) {
+export default function LessonPlanRatingDialog({
+  open,
+  setOpen,
+}: LessonPlanRatingDialogProps) {
   const { register, handleSubmit, control, reset } =
     useForm<AddRatingSchemaType>({
       resolver: zodResolver(addRatingSchema),
     })
   const params = useParams()
-  const exampleId = useSingleParam(params.exemploId)
+  const lessonPlanId = useSingleParam(params.planoId)
   const queryClient = useQueryClient()
 
   const { mutateAsync: createRatinAsync } = useMutation({
@@ -52,7 +55,7 @@ export default function RatingDialog({ open, setOpen }: RatingDialogProps) {
   async function handleAddRating(data: AddRatingSchemaType) {
     try {
       await createRatinAsync({
-        exampleId,
+        lessonPlanId,
         rate: Number(data.rate),
         comment: data.comment,
       })
@@ -102,7 +105,7 @@ export default function RatingDialog({ open, setOpen }: RatingDialogProps) {
               <div>
                 <fieldset className="space-y-4">
                   <legend className="text-foreground text-lg leading-none font-semibold">
-                    Qual a sua avaliação para este exemplo?
+                    Qual a sua avaliação para este plano de aula?
                   </legend>
                   <Controller
                     name="rate"
@@ -144,7 +147,7 @@ export default function RatingDialog({ open, setOpen }: RatingDialogProps) {
                 </Label>
                 <Textarea
                   id="feedback"
-                  placeholder="O que você achou deste exemplo?"
+                  placeholder="O que você achou deste plano de aula?"
                   aria-label="Send feedback"
                   {...register('comment')}
                 />
