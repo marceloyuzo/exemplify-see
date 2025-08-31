@@ -72,9 +72,9 @@ export default function ExampleRatingItem({
                   <Trash2Icon size={14} />
                 </div>
               )}
-              <div className="flex items-center gap-2">
-                <span className="text-primary-foreground">Nota:</span>
-                <span className="text-primary text-xl">{rate}</span>
+              <div className="flex items-center gap-2 text-lg">
+                <span className="text-secondary-foreground">Nota:</span>
+                <span className="text-primary">{rate}</span>
               </div>
             </div>
           </div>

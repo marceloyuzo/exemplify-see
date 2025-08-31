@@ -22,6 +22,13 @@ interface Topic {
   title: string
 }
 
+export interface Attachment {
+  id: string
+  title: string
+  url: string
+  type: string
+}
+
 export interface GetExampleDetailedResponse {
   id: string
   title: string
@@ -33,6 +40,8 @@ export interface GetExampleDetailedResponse {
   updatedAt: string
   author: Author
   topic: Topic
+  attachment: Attachment[]
+  averageRating: number
 }
 
 export async function getExampleDetailed({

@@ -72,6 +72,9 @@ export default function PainelExemplos() {
       queryClient.invalidateQueries({
         queryKey: ['examples-admin'],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['examples'],
+      })
     },
   })
 

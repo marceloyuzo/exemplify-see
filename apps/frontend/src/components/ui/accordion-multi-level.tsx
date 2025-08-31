@@ -11,7 +11,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Dispatch, SetStateAction } from 'react'
 
 type CollapsibleItem = {
   title: string
@@ -29,12 +28,10 @@ export type AccordionItemData = {
 
 interface AccordionMultiLevelProps {
   items: AccordionItemData[]
-  setDescription?: Dispatch<SetStateAction<string>>
 }
 
 export default function AccordionMultiLevel({
   items,
-  setDescription,
 }: AccordionMultiLevelProps) {
   return (
     <div className="space-y-4">
@@ -43,10 +40,6 @@ export default function AccordionMultiLevel({
           <AccordionItem
             value={item.id}
             key={item.id}
-            onClick={() => {
-              if (setDescription)
-                setDescription(item.content ? item.content : '')
-            }}
             className="bg-background has-focus-visible:border-ring has-focus-visible:ring-ring/50 relative border outline-none first:rounded-t-md last:rounded-b-md last:border-b has-focus-visible:z-10 has-focus-visible:ring-[3px]"
           >
             <AccordionTrigger className="rounded-md px-4 py-3 text-[15px] leading-6 outline-none hover:no-underline focus-visible:ring-0">

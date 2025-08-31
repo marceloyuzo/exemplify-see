@@ -12,8 +12,14 @@ import {
   VideoIcon,
   XIcon,
 } from 'lucide-react'
+import { forwardRef, useEffect, useRef } from 'react'
+import { Control, Controller, FieldError } from 'react-hook-form'
 
-import { formatBytes, useFileUpload } from '@/hooks/use-file-upload'
+import {
+  formatBytes,
+  useFileUpload,
+  FileWithPreview,
+} from '@/hooks/use-file-upload'
 import { Button } from '@/components/ui/button'
 
 // Create some dummy initial files
@@ -76,23 +82,335 @@ const getFileIcon = (file: { file: File | { type: string; name: string } }) => {
   return <FileIcon className="size-4 opacity-60" />
 }
 
-export default function FileUploaderInput() {
-  const maxSize = 100 * 1024 * 1024 // 10MB default
+export interface FileUploaderInputProps {
+  value?: FileWithPreview[]
+  onChange?: (files: FileWithPreview[]) => void
+  error?: FieldError
+  maxSize?: number
+  maxFiles?: number
+  accept?: string
+  multiple?: boolean
+  className?: string
+  disabled?: boolean
+}
+
+// Componente base do FileUploader
+const FileUploaderInputBase = forwardRef<
+  HTMLInputElement,
+  FileUploaderInputProps
+>(
+  (
+    {
+      value = [],
+      onChange,
+      error,
+      maxSize = 100 * 1024 * 1024, // 100MB default
+      maxFiles = 10,
+      accept = '*',
+      multiple = true,
+      className,
+      disabled = false,
+    },
+    ref,
+  ) => {
+    const internalInputRef = useRef<HTMLInputElement>(null)
+    const inputRef =
+      (ref as React.RefObject<HTMLInputElement>) || internalInputRef
+
+    const [
+      { files, isDragging, errors },
+      {
+        handleDragEnter,
+        handleDragLeave,
+        handleDragOver,
+        handleDrop,
+        removeFile,
+        clearFiles,
+        addFiles,
+      },
+    ] = useFileUpload({
+      multiple,
+      maxFiles,
+      maxSize,
+      accept,
+      initialFiles: [],
+      // Removemos onFilesChange para evitar setState durante render
+    })
+
+    // Usar value do React Hook Form se fornecido, caso contrário usar o estado interno
+    const displayFiles = value.length > 0 ? value : files
+
+    // Sincronizar mudanças com onChange quando houver mudanças internas
+    useEffect(() => {
+      if (value.length === 0 && files.length > 0) {
+        onChange?.(files)
+      }
+    }, [files, onChange, value.length])
+
+    const handleRemoveFile = (id: string) => {
+      if (value.length > 0) {
+        // Se estamos usando value controlado (React Hook Form)
+        const updatedFiles = value.filter((file) => file.id !== id)
+        onChange?.(updatedFiles)
+      } else {
+        // Se estamos usando estado interno
+        removeFile(id)
+      }
+    }
+
+    const handleClearFiles = () => {
+      if (value.length > 0) {
+        onChange?.([])
+      } else {
+        clearFiles()
+      }
+    }
+
+    const handleFileDialogOpen = () => {
+      if (!disabled && inputRef.current) {
+        inputRef.current.click()
+      }
+    }
+
+    const handleFilesAdded = (newFiles: FileList | File[]) => {
+      addFiles(newFiles)
+      // Se temos onChange, notificar sobre as mudanças
+      if (onChange && value.length === 0) {
+        // O useEffect vai pegar a mudança
+      }
+    }
+
+    const handleDropFiles = (e: React.DragEvent<HTMLElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (
+        disabled ||
+        !e.dataTransfer.files ||
+        e.dataTransfer.files.length === 0
+      ) {
+        return
+      }
+
+      const droppedFiles = e.dataTransfer.files
+      if (value.length > 0) {
+        // Modo controlado - criar FileWithPreview e chamar onChange
+        const newFilesPreviews = Array.from(droppedFiles).map((file) => ({
+          file,
+          id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          preview: file.type.startsWith('image/')
+            ? URL.createObjectURL(file)
+            : undefined,
+        }))
+
+        const updatedFiles = multiple
+          ? [...value, ...newFilesPreviews]
+          : newFilesPreviews
+        onChange?.(updatedFiles)
+      } else {
+        // Modo não controlado - usar o hook
+        handleDrop(e)
+      }
+    }
+
+    return (
+      <div className={`flex flex-col gap-2 ${className}`}>
+        {/* Drop area */}
+        <div
+          role="button"
+          onClick={handleFileDialogOpen}
+          onDragEnter={disabled ? undefined : handleDragEnter}
+          onDragLeave={disabled ? undefined : handleDragLeave}
+          onDragOver={disabled ? undefined : handleDragOver}
+          onDrop={handleDropFiles}
+          data-dragging={isDragging || undefined}
+          data-disabled={disabled || undefined}
+          className="border-input hover:bg-accent/50 data-[dragging=true]:bg-accent/50 has-[input:focus]:border-ring has-[input:focus]:ring-ring/50 flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed p-4 transition-colors has-disabled:pointer-events-none has-disabled:opacity-50 has-[input:focus]:ring-[3px] data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 cursor-pointer"
+        >
+          <input
+            type="file"
+            className="sr-only"
+            aria-label="Upload files"
+            disabled={disabled}
+            ref={inputRef}
+            accept={accept}
+            multiple={multiple}
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                if (value.length > 0) {
+                  // Modo controlado
+                  const newFilesPreviews = Array.from(e.target.files).map(
+                    (file) => ({
+                      file,
+                      id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                      preview: file.type.startsWith('image/')
+                        ? URL.createObjectURL(file)
+                        : undefined,
+                    }),
+                  )
+
+                  const updatedFiles = multiple
+                    ? [...value, ...newFilesPreviews]
+                    : newFilesPreviews
+                  onChange?.(updatedFiles)
+                } else {
+                  // Modo não controlado
+                  handleFilesAdded(e.target.files)
+                }
+
+                // Limpar o input
+                e.target.value = ''
+              }
+            }}
+          />{' '}
+          <div className="flex flex-col items-center justify-center text-center">
+            <div
+              className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border"
+              aria-hidden="true"
+            >
+              <FileUpIcon className="size-4 opacity-60" />
+            </div>
+            <p className="mb-1.5 text-sm font-medium">Upload de arquivo</p>
+            <p className="text-muted-foreground mb-2 text-xs">
+              Arraste os arquivos ou clique para procurar
+            </p>
+            <div className="text-muted-foreground/70 flex flex-wrap justify-center gap-1 text-xs">
+              <span>Todos os arquivos</span>
+              <span>∙</span>
+              <span>Máx. {maxFiles} arquivos</span>
+              <span>∙</span>
+              <span>Até {formatBytes(maxSize)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Display errors from React Hook Form or internal validation */}
+        {(error?.message || errors.length > 0) && (
+          <div
+            className="text-destructive flex items-center gap-1 text-xs"
+            role="alert"
+          >
+            <AlertCircleIcon className="size-3 shrink-0" />
+            <span>{error?.message || errors[0]}</span>
+          </div>
+        )}
+
+        {/* File list */}
+        {displayFiles.length > 0 && (
+          <div className="space-y-2">
+            {displayFiles.map((file) => (
+              <div
+                key={file.id}
+                className="bg-background flex items-center justify-between gap-2 rounded-lg border p-2 pe-3"
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="flex aspect-square size-10 shrink-0 items-center justify-center rounded border">
+                    {getFileIcon(file)}
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <p className="truncate text-[13px] font-medium">
+                      {file.file instanceof File
+                        ? file.file.name
+                        : file.file.name}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {formatBytes(
+                        file.file instanceof File
+                          ? file.file.size
+                          : file.file.size,
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-muted-foreground/80 hover:text-foreground -me-2 size-8 hover:bg-transparent"
+                  onClick={() => handleRemoveFile(file.id)}
+                  aria-label="Remove file"
+                  disabled={disabled}
+                  type="button"
+                >
+                  <XIcon className="size-4" aria-hidden="true" />
+                </Button>
+              </div>
+            ))}
+
+            {/* Remove all files button */}
+            {displayFiles.length > 1 && (
+              <div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleClearFiles}
+                  disabled={disabled}
+                  type="button"
+                >
+                  Remover todos
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  },
+)
+
+FileUploaderInputBase.displayName = 'FileUploaderInputBase'
+
+// Wrapper para usar com Controller do React Hook Form
+export interface FileUploaderControllerProps {
+  name: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: Control<any>
+  maxSize?: number
+  maxFiles?: number
+  accept?: string
+  multiple?: boolean
+  className?: string
+  disabled?: boolean
+  label?: string
+}
+
+export function FileUploaderController({
+  name,
+  control,
+  label,
+  ...props
+}: FileUploaderControllerProps) {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <div className="space-y-2">
+          {label && (
+            <label className="scroll-m-20 text-xl font-semibold tracking-tight">
+              {label}
+            </label>
+          )}
+          <FileUploaderInputBase
+            {...props}
+            value={field.value || []}
+            onChange={field.onChange}
+            error={fieldState.error}
+          />
+        </div>
+      )}
+    />
+  )
+}
+
+// Componente padrão (para compatibilidade com código existente)
+export default function FileUploaderInput(
+  props: Omit<FileUploaderInputProps, 'value' | 'onChange'>,
+) {
+  const maxSize = 100 * 1024 * 1024 // 100MB default
   const maxFiles = 10
 
-  const [
-    { files, isDragging, errors },
-    {
-      handleDragEnter,
-      handleDragLeave,
-      handleDragOver,
-      handleDrop,
-      openFileDialog,
-      removeFile,
-      clearFiles,
-      getInputProps,
-    },
-  ] = useFileUpload({
+  const [{ files }] = useFileUpload({
     multiple: true,
     maxFiles,
     maxSize,
@@ -100,105 +418,15 @@ export default function FileUploaderInput() {
   })
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Drop area */}
-      <div
-        role="button"
-        onClick={openFileDialog}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        data-dragging={isDragging || undefined}
-        className="border-input hover:bg-accent/50 data-[dragging=true]:bg-accent/50 has-[input:focus]:border-ring has-[input:focus]:ring-ring/50 flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed p-4 transition-colors has-disabled:pointer-events-none has-disabled:opacity-50 has-[input:focus]:ring-[3px]"
-      >
-        <input
-          {...getInputProps()}
-          className="sr-only"
-          aria-label="Upload files"
-        />
-
-        <div className="flex flex-col items-center justify-center text-center">
-          <div
-            className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border"
-            aria-hidden="true"
-          >
-            <FileUpIcon className="size-4 opacity-60" />
-          </div>
-          <p className="mb-1.5 text-sm font-medium">Upload de arquivo</p>
-          <p className="text-muted-foreground mb-2 text-xs">
-            Arraste os arquivos ou clique para procurar
-          </p>
-          <div className="text-muted-foreground/70 flex flex-wrap justify-center gap-1 text-xs">
-            <span>Todos os arquivos</span>
-            <span>∙</span>
-            <span>Máx. {maxFiles} arquivos</span>
-            <span>∙</span>
-            <span>Até {formatBytes(maxSize)}</span>
-          </div>
-        </div>
-      </div>
-
-      {errors.length > 0 && (
-        <div
-          className="text-destructive flex items-center gap-1 text-xs"
-          role="alert"
-        >
-          <AlertCircleIcon className="size-3 shrink-0" />
-          <span>{errors[0]}</span>
-        </div>
-      )}
-
-      {/* File list */}
-      {files.length > 0 && (
-        <div className="space-y-2">
-          {files.map((file) => (
-            <div
-              key={file.id}
-              className="bg-background flex items-center justify-between gap-2 rounded-lg border p-2 pe-3"
-            >
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className="flex aspect-square size-10 shrink-0 items-center justify-center rounded border">
-                  {getFileIcon(file)}
-                </div>
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <p className="truncate text-[13px] font-medium">
-                    {file.file instanceof File
-                      ? file.file.name
-                      : file.file.name}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {formatBytes(
-                      file.file instanceof File
-                        ? file.file.size
-                        : file.file.size,
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-muted-foreground/80 hover:text-foreground -me-2 size-8 hover:bg-transparent"
-                onClick={() => removeFile(file.id)}
-                aria-label="Remove file"
-              >
-                <XIcon className="size-4" aria-hidden="true" />
-              </Button>
-            </div>
-          ))}
-
-          {/* Remove all files button */}
-          {files.length > 1 && (
-            <div>
-              <Button size="sm" variant="outline" onClick={clearFiles}>
-                Remover todos
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    <FileUploaderInputBase
+      value={files}
+      maxSize={maxSize}
+      maxFiles={maxFiles}
+      multiple={true}
+      {...props}
+    />
   )
 }
+
+// Exportar ambos os componentes
+export { FileUploaderInputBase }

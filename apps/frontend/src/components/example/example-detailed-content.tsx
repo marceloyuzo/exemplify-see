@@ -3,15 +3,19 @@ import ExampleRatingList from './example-rating-list'
 import RatingDialog from '../rating/rating-dialog'
 import { useState } from 'react'
 import { Button } from '../ui/button'
+import { Attachment } from '@/api/example/get-example-detailed'
+import ExampleAttachmentCard from './example-attachment-card'
 
 interface ExampleDetailedContentProps {
   description: string
   references: string[]
+  attachments: Attachment[]
 }
 
 export default function ExampleDetailedContent({
   description,
   references,
+  attachments,
 }: ExampleDetailedContentProps) {
   const [open, setOpen] = useState<boolean>(false)
 
@@ -19,7 +23,7 @@ export default function ExampleDetailedContent({
     <>
       <Card className="w-full col-span-3 flex flex-col">
         <CardHeader>
-          <CardTitle className="scroll-m-20 text-2xl font-semibold tracking-tight text-primary">
+          <CardTitle className="scroll-m-20 text-2xl font-semibold tracking-tight text-balance bg-[linear-gradient(to_right,var(--primary),var(--secondary))] bg-clip-text text-transparent">
             Informações gerais
           </CardTitle>
         </CardHeader>
@@ -36,9 +40,28 @@ export default function ExampleDetailedContent({
             <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
               Referências
             </h4>
-            {references.map((reference, index) => (
-              <span key={index}>{reference}</span>
-            ))}
+            <div className="flex flex-col">
+              <ul className="ml-6 list-disc [&>li]:mt-2">
+                {references.map((reference, index) => (
+                  <li key={index}>{reference}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
+              Arquivos relacionados ao exemplo
+            </h4>
+            <div className="w-full flex gap-4">
+              {attachments.map((attachment) => (
+                <ExampleAttachmentCard
+                  key={attachment.id}
+                  title={attachment.title}
+                  type={attachment.type}
+                  url={attachment.url}
+                />
+              ))}
+            </div>
           </div>
           <div className="flex flex-col gap-4">
             <div className="flex justify-between">

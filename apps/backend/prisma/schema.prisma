@@ -231,6 +231,7 @@ model Example {
   isApprove    Boolean        @map("is_approve")
   exampleModel ExampleModel[]
   type         ExampleType
+  attachment   Attachment[]
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
@@ -282,4 +283,21 @@ model Rating {
 
   @@unique([userId, exampleId])
   @@map("ratings")
+}
+
+model Attachment {
+  id        String  @id @default(cuid())
+  title     String
+  type      String
+  url       String
+  key       String  @unique
+  size      Int?
+  exampleId String? @map("example_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  Example Example? @relation(fields: [exampleId], references: [id])
+
+  @@map("attachments")
 }

@@ -1,30 +1,35 @@
-import { IsArray, IsEnum, IsString, ValidateNested } from 'class-validator'
-import { Type } from 'class-transformer'
+import { IsArray, IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator'
+import { Transform, Type } from 'class-transformer'
 import { Example } from 'src/resources/lesson-plan/dto/create-lesson-plan.dto'
-
-export class ReferenceDto {
-  @IsString()
-  value: string
-}
 
 export class CreateExampleDto {
   @IsString()
+  @IsNotEmpty()
   title: string
 
   @IsString()
+  @IsNotEmpty()
   description: string
 
-  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
   topicId: string
 
   @IsArray()
+  @IsUUID(4, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return [value]
+    }
+    return Array.isArray(value) ? value : []
+  })
   modelsId: string[]
 
   @IsEnum(Example)
   exampleType: Example
 
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ReferenceDto)
-  references: ReferenceDto[]
+  @IsString({ each: true })
+  @Type(() => String)
+  references: string[]
 }

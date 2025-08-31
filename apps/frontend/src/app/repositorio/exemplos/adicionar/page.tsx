@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import FileUploaderInput from '@/components/ui/file-uploader-input'
+import { FileUploaderController } from '@/components/ui/file-uploader-input'
 import { InputAnimated } from '@/components/ui/input-animated'
 import { Label } from '@/components/ui/label'
 import { MultiSelectOverlapping } from '@/components/ui/mutiselect-custom'
@@ -42,6 +42,10 @@ const addExampleSchema = z.object({
       }),
     )
     .min(1, 'Pelo menos uma referência é obrigatória.'),
+  files: z
+    .array(z.any())
+    .min(1, 'Pelo menos um arquivo é obrigatório.')
+    .optional(),
 })
 
 type AddExampleSchemaType = z.infer<typeof addExampleSchema>
@@ -63,6 +67,7 @@ export default function FormCriacaoExemplo() {
       modelsId: [],
       exampleType: '',
       references: [],
+      files: [],
     },
   })
 
@@ -74,11 +79,15 @@ export default function FormCriacaoExemplo() {
   const { data: topicsData, isLoading: topicIsLoading } = useQuery({
     queryKey: ['topic-options'],
     queryFn: getTopicOptions,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
   })
 
   const { data: modelsData, isLoading: modelIsLoading } = useQuery({
     queryKey: ['model-options'],
     queryFn: getModelOptions,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
   })
 
   const { mutateAsync: createExampleAsync } = useMutation({
@@ -87,14 +96,28 @@ export default function FormCriacaoExemplo() {
 
   async function handleSubmitExample(data: AddExampleSchemaType) {
     try {
-      await createExampleAsync({
-        title: data.title,
-        description: data.description,
-        exampleType: data.exampleType,
-        modelsId: data.modelsId,
-        references: data.references,
-        topicId: data.topicId,
+      const formData = new FormData()
+
+      formData.append('title', data.title)
+      formData.append('description', data.description)
+      formData.append('exampleType', data.exampleType)
+      formData.append('topicId', data.topicId)
+
+      data.modelsId.forEach((modelId) => {
+        formData.append('modelsId[]', modelId)
       })
+
+      data.references.forEach((ref, index) => {
+        formData.append(`references[${index}]`, ref.value)
+      })
+
+      data.files?.forEach((fileWithPreview) => {
+        if (fileWithPreview.file instanceof File) {
+          formData.append('files', fileWithPreview.file)
+        }
+      })
+
+      await createExampleAsync(formData)
 
       toast.success('Exemplo criado com sucesso.', {
         position: 'top-center',
@@ -139,8 +162,6 @@ export default function FormCriacaoExemplo() {
       isCurrent: true,
     },
   ]
-
-  console.log(modelsData)
 
   return (
     <>
@@ -235,7 +256,7 @@ export default function FormCriacaoExemplo() {
               name="modelsId"
               render={({ field }) => (
                 <MultiSelectOverlapping
-                  key={modelIsLoading ? 'loading' : 'loaded'} // força rerender
+                  key={modelIsLoading ? 'loading' : 'loaded'}
                   className="w-full col-span-1"
                   label="Modelos UML"
                   options={
@@ -310,7 +331,14 @@ export default function FormCriacaoExemplo() {
                 Arquivos do Exemplo
               </Label>
               <div className="mt-4">
-                <FileUploaderInput />
+                <FileUploaderController
+                  name="files"
+                  control={control}
+                  maxSize={100 * 1024 * 1024} // 100MB
+                  maxFiles={10}
+                  multiple={true}
+                  accept="*"
+                />
               </div>
             </div>
 

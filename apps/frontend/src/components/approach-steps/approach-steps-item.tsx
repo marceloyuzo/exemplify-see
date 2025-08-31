@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '../ui/dialog'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card'
+import AccordionMultiLevelDetailed from '../ui/accordion-multi-level-detailed'
 
 interface ApproachStepsItemProps {
   label: string
@@ -23,7 +24,6 @@ export default function ApproachStepsItem({
   items,
 }: ApproachStepsItemProps) {
   const [open, setOpen] = useState<boolean>(false)
-  const [description, setDescription] = useState<string>('')
 
   return (
     <>
@@ -65,23 +65,15 @@ export default function ApproachStepsItem({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="!w-[1200px] !max-w-[1200px] max-h-[90vh] h-[800px] overflow-y-auto">
           <div className="flex gap-6">
-            {/* Sidebar Accordion */}
-            <div className="w-1/3 max-h-[80vh] overflow-y-auto">
-              <AccordionMultiLevel
-                items={items}
-                setDescription={setDescription}
-              />
-            </div>
-
             {/* Main Content */}
-            <div className="w-2/3">
+            <div className="w-full">
               <DialogHeader>
                 <DialogTitle className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
                   {label}
                 </DialogTitle>
               </DialogHeader>
 
-              <p className="whitespace-break-spaces mt-4">{description}</p>
+              <AccordionMultiLevelDetailed items={items} />
             </div>
           </div>
 

@@ -15,12 +15,13 @@ import { toast } from 'sonner'
 import axios, { AxiosError } from 'axios'
 import { deleteExample, DeleteExampleProps } from '@/api/example/delete-example'
 import { ExampleResponseAdmin } from '@/api/example/find-examples-admin'
+import { GetExampleDetailedResponse } from '@/api/example/get-example-detailed'
 
 interface ExampleDeleteDialogProps {
-  exampleToDelete: ExampleResponseAdmin | null
+  exampleToDelete: ExampleResponseAdmin | null | GetExampleDetailedResponse
   open: boolean
   setOpen: Dispatch<SetStateAction<boolean>>
-  setExampleToDelete: Dispatch<SetStateAction<ExampleResponseAdmin | null>>
+  setExampleToDelete?: Dispatch<SetStateAction<ExampleResponseAdmin | null>>
 }
 
 export default function ExampleDeleteDialog({
@@ -37,7 +38,12 @@ export default function ExampleDeleteDialog({
         id,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['example'] })
+      queryClient.invalidateQueries({
+        queryKey: ['examples-admin'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['examples'],
+      })
     },
   })
 
@@ -52,7 +58,7 @@ export default function ExampleDeleteDialog({
       })
 
       setOpen(false)
-      setExampleToDelete(null)
+      if (setExampleToDelete) setExampleToDelete(null)
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const axiosErr = err as AxiosError<{ message: string }>

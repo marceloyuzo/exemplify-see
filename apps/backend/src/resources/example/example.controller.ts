@@ -7,13 +7,17 @@ import {
   Post,
   Query,
   Request,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common'
 import { ExampleService } from './example.service'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard'
 import { User } from '@prisma/client'
 import { AdminGuard } from 'src/common/guards/admin.guard'
 import { CreateExampleDto } from './dto/create-example.dto'
+import { FilesInterceptor } from '@nestjs/platform-express'
+import { MulterFile } from '../attachment/attachment.service'
 
 @Controller('/example')
 export class ExampleController {
@@ -94,30 +98,24 @@ export class ExampleController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FilesInterceptor('files', 10))
   async createExample(
     @Request() req: Request & { user: User },
     @Body()
-    {
-      title,
-      description,
-      references,
-      exampleType,
-      modelsId,
-      topicId,
-    }: CreateExampleDto,
+    createExampleDto: CreateExampleDto,
+    @UploadedFiles() files: MulterFile[],
   ) {
     const user = req.user
 
-    const referenceStrings = references.map((r) => r.value || '')
-
     return await this.exampleService.createExample({
-      title,
-      description,
-      references: referenceStrings,
-      exampleType,
-      modelsId,
-      topicId,
+      title: createExampleDto.title,
+      description: createExampleDto.description,
+      references: createExampleDto.references,
+      exampleType: createExampleDto.exampleType,
+      modelsId: createExampleDto.modelsId,
+      topicId: createExampleDto.topicId,
       authorId: user.id,
+      files,
     })
   }
 }

@@ -1,12 +1,18 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common'
 import { $Enums, Prisma } from '@prisma/client'
 import { PrismaService } from 'src/database/services/prisma.service'
 import { Example } from '../lesson-plan/dto/create-lesson-plan.dto'
+import { CreateAttachmentDto } from '../attachment/dto/create-attachment.dto'
+import {
+  AttachmentsService,
+  MulterFile,
+} from '../attachment/attachment.service'
 
 interface FindManyExamplesProps {
   page: number
@@ -36,6 +42,7 @@ interface CreateExampleProps {
   modelsId: string[]
   exampleType: Example
   references: string[]
+  files: MulterFile[]
 }
 
 interface ApproveExampleProps {
@@ -44,7 +51,11 @@ interface ApproveExampleProps {
 
 @Injectable()
 export class ExampleService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(ExampleService.name)
+  constructor(
+    private prisma: PrismaService,
+    private attachmentsService: AttachmentsService,
+  ) {}
 
   async findManyExamples({
     page,
@@ -185,6 +196,14 @@ export class ExampleService {
             title: true,
           },
         },
+        attachment: {
+          select: {
+            id: true,
+            title: true,
+            url: true,
+            type: true,
+          },
+        },
       },
     })
 
@@ -194,32 +213,61 @@ export class ExampleService {
       )
     }
 
-    return example
+    const exampleWithAverageRating = await this.prisma.rating.aggregate({
+      where: { exampleId },
+      _avg: { rate: true },
+    })
+
+    const exampleWithAvg = {
+      ...example,
+      averageRating: exampleWithAverageRating._avg?.rate ?? null,
+    }
+
+    return exampleWithAvg
   }
 
   async deleteExample({ exampleId, role, userId }: DeleteExampleProps) {
-    const isExampleExists = await this.prisma.example.findUnique({
+    const example = await this.prisma.example.findUnique({
       where: {
         id: exampleId,
       },
+      include: {
+        attachment: true,
+      },
     })
 
-    if (!isExampleExists) {
+    if (!example) {
       throw new NotFoundException(
         'Não existe um exemplo com esse identificador.',
       )
     }
 
-    if (isExampleExists.authorId !== userId && role !== 'admin') {
+    if (example.authorId !== userId && role !== 'admin') {
       throw new UnauthorizedException(
         'Você não possui permissão para realizar essa operação.',
       )
     }
 
-    return await this.prisma.example.delete({
-      where: {
-        id: exampleId,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.exampleModel.deleteMany({
+        where: { exampleId },
+      })
+
+      await tx.rating.deleteMany({
+        where: { exampleId },
+      })
+
+      tx.example.delete({
+        where: { id: exampleId },
+      })
+
+      if (example.attachment?.length) {
+        await Promise.all(
+          example.attachment.map((att) =>
+            tx.attachment.delete({ where: { id: att.id } }),
+          ),
+        )
+      }
     })
   }
 
@@ -231,6 +279,7 @@ export class ExampleService {
     exampleType,
     modelsId,
     topicId,
+    files,
   }: CreateExampleProps) {
     const isTopicExists = await this.prisma.topic.findUnique({
       where: {
@@ -254,7 +303,7 @@ export class ExampleService {
       }
     }
 
-    await this.prisma.example.create({
+    const example = await this.prisma.example.create({
       data: {
         title,
         description,
@@ -273,5 +322,39 @@ export class ExampleService {
         exampleModel: true,
       },
     })
+
+    if (files && files.length > 0) {
+      try {
+        await Promise.all(
+          files.map(async (file) => {
+            const createAttachmentDto: CreateAttachmentDto = {
+              title: file.originalname,
+              customPath: `examples/${example.id}`,
+            }
+
+            const attachment = await this.attachmentsService.create(
+              createAttachmentDto,
+              file,
+            )
+
+            const updatedAttachment = await this.prisma.attachment.update({
+              where: { id: attachment.id },
+              data: { exampleId: example.id },
+            })
+
+            return updatedAttachment
+          }),
+        )
+      } catch (error) {
+        this.logger.error(
+          `Error processing attachments for example ${example.id}:`,
+          error,
+        )
+
+        this.logger.warn(
+          `Example ${example.id} created but some attachments failed`,
+        )
+      }
+    }
   }
 }

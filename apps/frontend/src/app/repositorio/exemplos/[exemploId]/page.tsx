@@ -12,11 +12,16 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { HomeIcon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
+import { useUser } from '@/hooks/use-user'
+import ExampleDeleteDialog from '@/components/example/example-delete-dialog'
+import { useState } from 'react'
 
 export default function ExampleDetailedPage() {
   const router = useRouter()
   const params = useParams()
   const exampleId = useSingleParam(params.exemploId)
+  const { user } = useUser()
+  const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false)
 
   const { data: exampleData } = useQuery({
     queryKey: ['example', exampleId],
@@ -68,16 +73,35 @@ export default function ExampleDetailedPage() {
         </div>
       </section>
 
+      {user?.id === exampleData.author.id && (
+        <div className="mb-4 flex gap-4 justify-end">
+          <Button
+            variant={'destructive'}
+            onClick={() => setOpenDeleteDialog(true)}
+          >
+            Excluir Exemplo
+          </Button>
+          <ExampleDeleteDialog
+            exampleToDelete={exampleData}
+            open={openDeleteDialog}
+            setOpen={setOpenDeleteDialog}
+          />
+
+          <Button variant={'outline'}>Editar Exemplo</Button>
+        </div>
+      )}
+
       <ExampleDetailedHeader
         title={exampleData.title}
+        rating={exampleData.averageRating}
         createdAt={createdAtFormatted}
         updatedAt={updatedAtFormatted}
       />
-
       <div className="mt-2 grid grid-cols-4 gap-2 flex-1">
         <ExampleDetailedContent
           description={exampleData.description}
           references={exampleData.references}
+          attachments={exampleData.attachment}
         />
         <ExampleDetailedMetadata
           user={exampleData.author}
