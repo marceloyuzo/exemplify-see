@@ -114,9 +114,9 @@ export default function ExampleDetailedPage() {
 
       <LessonPlanDetailedHeader
         title={lessonPlanData.title}
+        rating={lessonPlanData.averageRating}
         createdAt={createdAtFormatted}
         updatedAt={updatedAtFormatted}
-        rating={4}
       />
 
       <div className="mt-2 grid grid-cols-4 gap-2 flex-1">

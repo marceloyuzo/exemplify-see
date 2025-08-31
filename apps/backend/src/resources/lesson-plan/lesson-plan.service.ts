@@ -254,6 +254,11 @@ export class LessonPlanService {
       remote: 'Remoto',
     }
 
+    const lessonPlanWithAverageRating = await this.prisma.rating.aggregate({
+      where: { lessonPlanId: id },
+      _avg: { rate: true },
+    })
+
     return {
       ...lessonPlan,
       complexityLabel: lessonPlan.complexity
@@ -265,6 +270,7 @@ export class LessonPlanService {
       modalityLabel: lessonPlan.modality
         ? modalityLabelMap[lessonPlan.modality]
         : null,
+      averageRating: lessonPlanWithAverageRating._avg?.rate ?? null,
     }
   }
 
