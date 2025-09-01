@@ -878,6 +878,7 @@ export function LessonPlanProvider({
     } catch (error) {
       // Erro já tratado no onError
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     metadataForm,
     approachId,
