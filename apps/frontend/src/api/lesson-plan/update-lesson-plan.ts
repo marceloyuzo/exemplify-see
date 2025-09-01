@@ -2,6 +2,7 @@ import { api } from '@/lib/axios'
 import { LessonPlanAxis } from './create-lesson-plan'
 
 interface UpdateLessonPlanProps {
+  lessonPlanId?: string
   title: string
   description?: string
   subjectId?: string

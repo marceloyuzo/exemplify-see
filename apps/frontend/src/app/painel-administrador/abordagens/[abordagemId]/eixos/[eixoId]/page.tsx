@@ -11,10 +11,7 @@ import {
   BackgroundVariant,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import QuestionNode from '@/components/question/question-node'
-import AddNode from '@/components/question/add-node'
 import { getLayoutedElements } from '@/lib/dagre'
-import { CustomEdge } from '@/components/question/custom-edge'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { findManyQuestions } from '@/api/questions/find-many-questions'
@@ -25,6 +22,8 @@ import { Breadcrumbs } from '@/components/interface/breadcrumbs'
 import { HomeIcon } from 'lucide-react'
 import { useSingleParam } from '@/utils/single-param'
 import { getAxis, GetAxisResponse } from '@/api/axis/get-axis'
+import { edgeTypes } from '@/lib/edge-types'
+import { nodeTypes } from '@/lib/node-types'
 
 export interface QuestionNodeData {
   title: string
@@ -55,9 +54,6 @@ export interface CustomEdgeData {
 }
 
 export type CustomEdgeProps = Edge<CustomEdgeData>
-
-export const nodeTypes = { questionNode: QuestionNode, ghostNode: AddNode }
-export const edgeTypes = { custom: CustomEdge }
 
 export default function EixoPage() {
   const router = useRouter()

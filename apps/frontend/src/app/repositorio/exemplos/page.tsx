@@ -5,6 +5,7 @@ import { HomeIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
 import ExampleList from '@/components/example/example-list'
+import { Suspense } from 'react'
 
 export default function RepositorioExemplosPage() {
   const router = useRouter()
@@ -40,7 +41,9 @@ export default function RepositorioExemplosPage() {
           Repositório de Exemplos
         </h2>
 
-        <ExampleList myLessons={false} />
+        <Suspense fallback={<div>Carregando planos de aula...</div>}>
+          <ExampleList myLessons={false} />
+        </Suspense>
       </div>
     </>
   )

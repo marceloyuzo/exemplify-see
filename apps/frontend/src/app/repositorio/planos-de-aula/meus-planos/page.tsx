@@ -5,6 +5,7 @@ import { HomeIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
 import LessonPlanList from '@/components/lesson-plan/lesson-plan-list'
+import { Suspense } from 'react'
 
 export default function MeusPlanosPage() {
   const router = useRouter()
@@ -39,8 +40,9 @@ export default function MeusPlanosPage() {
           </Button>
           <Breadcrumbs items={breadcrumbItems} />
         </div>
-
-        <LessonPlanList myLessons={true} />
+        <Suspense fallback={<div>Carregando planos de aula...</div>}>
+          <LessonPlanList myLessons={true} />
+        </Suspense>
       </div>
     </>
   )

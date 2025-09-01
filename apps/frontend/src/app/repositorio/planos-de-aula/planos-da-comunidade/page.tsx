@@ -4,7 +4,12 @@ import { Button } from '@/components/ui/button'
 import { HomeIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
-import LessonPlanList from '@/components/lesson-plan/lesson-plan-list'
+import dynamic from 'next/dynamic'
+
+const LessonPlanList = dynamic(
+  () => import('@/components/lesson-plan/lesson-plan-list'),
+  { ssr: false },
+)
 
 export default function PlanosComunidadePage() {
   const router = useRouter()

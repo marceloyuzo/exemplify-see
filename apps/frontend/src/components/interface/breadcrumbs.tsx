@@ -36,8 +36,7 @@ export function Breadcrumbs({ items }: BreadcrumbProps) {
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink
-                    onClick={() => router.push(item.href)}
-                    // href={item.href || '#'}
+                    onClick={() => router.push(item.href || '#')}
                     className="flex items-center gap-1 cursor-pointer"
                   >
                     {item.icon && (
