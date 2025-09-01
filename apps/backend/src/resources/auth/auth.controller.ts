@@ -92,6 +92,7 @@ export class AuthController {
         name: user.name,
         role: user.role,
         photoURL: user.photoURL,
+        firstTime: user.firstTime,
       },
     }
   }
@@ -106,25 +107,6 @@ export class AuthController {
       message: 'Token válido',
       user: user.email,
       timestamp: new Date().toISOString(),
-    }
-  }
-
-  @Get('protected-example')
-  @UseGuards(JwtAuthGuard)
-  async protectedRoute(@Req() req: Request) {
-    const user = req.user
-
-    if (!user) {
-      return
-    }
-
-    return {
-      message: 'Esta é uma rota protegida!',
-      user: user.email,
-      data: {
-        secret: 'Dados secretos aqui',
-        timestamp: new Date().toISOString(),
-      },
     }
   }
 }

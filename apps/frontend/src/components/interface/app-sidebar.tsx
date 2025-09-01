@@ -1,6 +1,12 @@
 'use client'
 
-import { Folders, Frame, HomeIcon, Settings } from 'lucide-react'
+import {
+  Brain,
+  ClipboardList,
+  Database,
+  HomeIcon,
+  Settings,
+} from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -16,16 +22,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const menuData = [
     { title: 'Início', url: '/', icon: HomeIcon },
-    { title: 'Etapas da Abordagem', url: '/etapas-da-abordagem', icon: Frame },
-    { title: 'Plano de Aula', url: '/plano-de-aula', icon: Frame },
+    { title: 'Plano de Aula', url: '/plano-de-aula', icon: ClipboardList },
     {
       title: 'Repositório',
       url: '#',
-      icon: Folders,
+      icon: Database,
       items: [
         { title: 'Exemplos', url: '/repositorio/exemplos' },
         { title: 'Planos de Aula', url: '/repositorio/planos-de-aula' },
       ],
+    },
+    {
+      title: 'Etapas da Abordagem',
+      url: '/etapas-da-abordagem',
+      icon: Brain,
     },
     ...(isAdmin
       ? [

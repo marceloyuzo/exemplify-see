@@ -315,9 +315,13 @@ export default function UsersTable() {
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filtrar por papel" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-card">
               {USER_ROLES.map((roleOption) => (
-                <SelectItem key={roleOption.value} value={roleOption.value}>
+                <SelectItem
+                  key={roleOption.value}
+                  value={roleOption.value}
+                  className="cursor-pointer hover:bg-popover transition-all duration-300"
+                >
                   {roleOption.label}
                 </SelectItem>
               ))}

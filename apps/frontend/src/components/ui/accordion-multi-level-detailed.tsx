@@ -17,6 +17,7 @@ type CollapsibleItem = {
   content?: string
   open?: boolean
   items?: CollapsibleItem[]
+  titleContent?: string
 }
 
 export type AccordionItemData = {
@@ -45,7 +46,7 @@ export default function AccordionMultiLevelDetailed({
             <AccordionTrigger className="rounded-md px-4 py-3 text-[15px] leading-6 outline-none hover:no-underline focus-visible:ring-0">
               {item.title}
             </AccordionTrigger>
-            <AccordionContent className="p-0 ">
+            <AccordionContent className="p-0">
               {item.collapsibles.map((collapsible, index) => (
                 <CollapsibleDemo
                   key={index}
@@ -53,8 +54,15 @@ export default function AccordionMultiLevelDetailed({
                   items={collapsible.items}
                   open={collapsible.open}
                   content={collapsible.content}
+                  titleContent={item.content}
                 />
               ))}
+
+              {item.content && (
+                <p className="leading-7 whitespace-break-spaces m-4">
+                  {item.content}
+                </p>
+              )}
             </AccordionContent>
           </AccordionItem>
         ))}
@@ -65,6 +73,7 @@ export default function AccordionMultiLevelDetailed({
 
 function CollapsibleDemo({ title, items, open, content }: CollapsibleItem) {
   const hasItems = Boolean(items && items.length > 0)
+  console.log(content)
 
   // Cenário 1: O item tem tanto 'content' quanto 'items' filhos.
   // Ele se torna um Collapsible cujo conteúdo é o layout de 2 colunas.

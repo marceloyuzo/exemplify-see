@@ -6,12 +6,14 @@ import {
   Param,
   Put,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard'
 import { UsersService } from './users.service'
 import { EditUserDto } from './dto/edit-user-dto'
 import { AdminGuard } from 'src/common/guards/admin.guard'
+import { User } from '@prisma/client'
 
 @Controller('/users')
 export class UsersController {
@@ -52,6 +54,16 @@ export class UsersController {
       name,
       role,
       orderBy,
+    })
+  }
+
+  @Put('firstTime')
+  @UseGuards(JwtAuthGuard)
+  async disableFirstTime(@Req() req: Request & { user: User }) {
+    const { id } = req.user
+
+    return await this.usersService.disableFirstTime({
+      userId: id,
     })
   }
 }

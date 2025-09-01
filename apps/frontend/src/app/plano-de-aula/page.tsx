@@ -11,6 +11,7 @@ import { LessonPlanProvider } from '@/contexts/lesson-plan-context'
 import LessonPlanMenu from '@/components/lesson-plan/lesson-plan-menu'
 import LessonPlanContent from '@/components/lesson-plan/lesson-plan-content'
 import { useUser } from '@/hooks/use-user'
+import OnBoarding from '@/components/lesson-plan/onboarding'
 
 const APPROACH_ID = 'ce2fd7bd-a7bb-4438-86c3-98f4dcb0e105'
 
@@ -62,15 +63,19 @@ export default function LessonPlanPage() {
       lessonPlanId={lessonPlanId}
       currentUserId={user?.id}
     >
-      <div className="flex gap-4">
-        <Button
-          variant={'outline'}
-          onClick={() => router.push(`/`)}
-          className="cursor-pointer"
-        >
-          Voltar
-        </Button>
-        <Breadcrumbs items={breadcrumbItems} />
+      <div className="flex justify-between">
+        <div className="flex gap-4">
+          <Button
+            variant={'outline'}
+            onClick={() => router.push(`/`)}
+            className="cursor-pointer"
+          >
+            Voltar
+          </Button>
+          <Breadcrumbs items={breadcrumbItems} />
+        </div>
+
+        <OnBoarding />
       </div>
 
       {isFetching && <p>Atualizando dados...</p>}

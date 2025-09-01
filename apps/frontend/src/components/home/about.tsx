@@ -1,7 +1,13 @@
 export default function About() {
   return (
     <div className="grid grid-cols-2 gap-10 bg-card p-10 border rounded-xl">
-      <div className="bg-white col-span-1 m-10"></div>
+      <div className="col-span-1 flex justify-center items-center">
+        <img
+          src="/image-about.jpg"
+          alt="Teste"
+          style={{ width: '500px', borderRadius: '8px' }}
+        />
+      </div>
       <div className="col-span-1">
         <h2
           className="text-center text-3xl font-semibold mb-10 bg-[linear-gradient(to_right,var(--primary),var(--secondary))] 

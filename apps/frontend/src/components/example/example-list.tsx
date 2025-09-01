@@ -118,6 +118,7 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
         isUpdatingFromURL.current = false
       }, 100)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exampleNameParam, subjectIdParam, topicIdParam, exampleParam, setValue])
 
   useEffect(() => {

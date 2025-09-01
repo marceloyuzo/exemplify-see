@@ -1,14 +1,24 @@
-export default function FeatureCard() {
+import { ReactNode } from 'react'
+
+interface FeatureCardProps {
+  title: string
+  description: string
+  icon: ReactNode
+}
+
+export default function FeatureCard({
+  description,
+  title,
+  icon,
+}: FeatureCardProps) {
   return (
-    <div className="w-full h-fit max-w-80 bg-card rounded-xl border p-6 flex flex-col items-center text-center">
-      <div className="bg-white w-30 h-30"></div>
-      <h3 className="scroll-m-20 text-xl font-semibold tracking-tight text-primary">
-        Monte seus planos de aulas
+    <div className="w-full max-w-80 bg-card rounded-xl border p-6 flex flex-col items-center text-center h-full min-h-80 max-h-80">
+      <div className="text-primary mb-4">{icon}</div>
+      <h3 className="scroll-m-20 text-xl font-semibold tracking-tight text-balance bg-[linear-gradient(to_right,var(--primary),var(--secondary))] bg-clip-text text-transparent">
+        {title}
       </h3>
-      <p className="mt-4 text-sm leading-7 [&:not(:first-child)]:mt-6">
-        Contrary to popular belief, Lorem Ipsum is not simply random text. It
-        has roots in a piece of classical Latin literature from 45 BC, making it
-        over 2000 years old.
+      <p className="mt-2 text-sm leading-7 text-muted-foreground">
+        {description}
       </p>
     </div>
   )

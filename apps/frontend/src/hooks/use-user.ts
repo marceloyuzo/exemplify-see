@@ -10,6 +10,7 @@ export interface User {
   name: string
   email: string
   photoURL: string
+  firstTime: boolean
   role: 'admin' | 'user'
   createdAt: string
   updatedAt: string

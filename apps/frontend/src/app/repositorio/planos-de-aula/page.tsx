@@ -15,7 +15,8 @@ export default function LessonPlanRepositoryPage() {
       href: '/',
       icon: <HomeIcon size={16} aria-hidden="true" />,
     },
-    { label: 'Repositório de Planos de Aula', isCurrent: true },
+    { label: 'Repositório', href: '#' },
+    { label: 'Planos de Aula', isCurrent: true },
   ]
   return (
     <>

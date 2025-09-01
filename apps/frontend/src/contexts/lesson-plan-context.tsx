@@ -77,6 +77,7 @@ export interface AxisState {
   currentSteps: Step[]
   isLoadingRoot: boolean
   isLoadingNext: boolean
+  hasMoreQuestions: boolean
 }
 
 export interface AxisData extends AxisState {
@@ -208,6 +209,7 @@ export function LessonPlanProvider({
         currentSteps: [],
         isLoadingRoot: true,
         isLoadingNext: false,
+        hasMoreQuestions: false,
       }
     })
     setAxisStates(initialStates)
@@ -233,29 +235,82 @@ export function LessonPlanProvider({
     enabled: axisIds.length > 0,
   })
 
-  // Atualizar estados quando as perguntas root chegarem
   useEffect(() => {
-    if (rootQueries.data) {
+    const shouldInitialize =
+      Object.keys(axisStates).length === 0 ||
+      !axisIds.every((id) => axisStates[id])
+
+    if (shouldInitialize) {
+      const initialStates: Record<string, AxisState> = {}
+      axisIds.forEach((axisId) => {
+        initialStates[axisId] = axisStates[axisId] || {
+          currentQuestions: [],
+          questionsHistory: [],
+          currentSteps: [],
+          isLoadingRoot: true,
+          isLoadingNext: false,
+        }
+      })
+      setAxisStates(initialStates)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [axisIds])
+
+  useEffect(() => {
+    setAxisStates((prevStates) => {
+      const newStates = { ...prevStates }
+
+      axisIds.forEach((axisId) => {
+        if (newStates[axisId]) {
+          newStates[axisId] = {
+            ...newStates[axisId],
+            isLoadingRoot: rootQueries.isLoading || rootQueries.isFetching,
+          }
+        }
+      })
+
+      return newStates
+    })
+
+    if (rootQueries.data && !rootQueries.isLoading && !rootQueries.isFetching) {
       setAxisStates((prevStates) => {
         const newStates = { ...prevStates }
-        console.log(rootQueries.data)
+
         rootQueries.data.forEach(({ axisId, question }) => {
-          newStates[axisId] = {
-            ...prevStates[axisId],
-            currentQuestions: question ? [question] : [],
-            questionsHistory: [],
-            currentSteps: [],
-            isLoadingRoot: false,
+          if (newStates[axisId]) {
+            const currentQuestions = question ? [question] : []
+            const hasChanged =
+              newStates[axisId].currentQuestions.length !==
+                currentQuestions.length ||
+              newStates[axisId].currentQuestions[0]?.id !==
+                currentQuestions[0]?.id
+
+            if (hasChanged || newStates[axisId].isLoadingRoot) {
+              newStates[axisId] = {
+                ...newStates[axisId],
+                currentQuestions,
+                questionsHistory:
+                  newStates[axisId].questionsHistory.length === 0
+                    ? []
+                    : newStates[axisId].questionsHistory,
+                currentSteps:
+                  newStates[axisId].currentSteps.length === 0
+                    ? []
+                    : newStates[axisId].currentSteps,
+                isLoadingRoot: false,
+                hasMoreQuestions: false,
+              }
+            }
           }
         })
+
         return newStates
       })
     }
-  }, [rootQueries.data])
+  }, [rootQueries.data, rootQueries.isLoading, rootQueries.isFetching, axisIds])
 
   useEffect(() => {
     if (existingLessonPlan && !isDataLoaded) {
-      // Definir o ID do autor original
       setOriginalAuthorId(existingLessonPlan.userId)
 
       // Carregar metadados
@@ -405,6 +460,7 @@ export function LessonPlanProvider({
         currentSteps,
         isLoadingRoot: false,
         isLoadingNext: false,
+        hasMoreQuestions: false,
       }
     }
 
@@ -424,6 +480,7 @@ export function LessonPlanProvider({
     }
 
     reconstructData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing, isDataLoaded, rootQueries.data, existingLessonPlan])
 
   // Função para obter steps de uma resposta
@@ -480,6 +537,7 @@ export function LessonPlanProvider({
     })
 
     return () => subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watch, axisStates])
 
   // Atualizar resposta de um eixo específico
@@ -532,12 +590,14 @@ export function LessonPlanProvider({
           (t) => t.answerValue.id === answerId,
         )
 
+        let hasMoreQuestions = false
         if (selectedTransition?.toQuestionId) {
           // Marcar para buscar próxima pergunta
           setNextQuestionQueries((prev) => ({
             ...prev,
             [axisId]: answerId,
           }))
+          hasMoreQuestions = true
         }
 
         return {
@@ -547,6 +607,7 @@ export function LessonPlanProvider({
             questionsHistory: questionsToKeep,
             currentQuestions: filteredQuestions,
             currentSteps: stepsFromAnswer,
+            hasMoreQuestions,
           },
         }
       })
@@ -587,6 +648,7 @@ export function LessonPlanProvider({
                 ...newStates[axisId].currentQuestions,
                 question,
               ],
+              hasMoreQuestions: false,
             }
           }
         })
@@ -611,6 +673,7 @@ export function LessonPlanProvider({
           currentSteps: [],
           isLoadingRoot: true,
           isLoadingNext: false,
+          hasMoreQuestions: false,
           isCompleted: false,
           totalQuestions: 0,
           currentAnswers: {},
@@ -624,7 +687,8 @@ export function LessonPlanProvider({
       const isCompleted =
         axisState.currentQuestions.length > 0 &&
         axisState.currentQuestions.every((q) => currentAnswers[q.id]) &&
-        !axisState.isLoadingNext
+        !axisState.isLoadingNext &&
+        !axisState.hasMoreQuestions
 
       return {
         ...axisState,
@@ -673,6 +737,7 @@ export function LessonPlanProvider({
           currentQuestions: prevStates[axisId].currentQuestions.slice(0, 1), // Manter apenas a primeira pergunta
           questionsHistory: [],
           currentSteps: [],
+          hasMoreQuestions: false,
         },
       }))
     },
@@ -702,6 +767,7 @@ export function LessonPlanProvider({
               q.id === prevStates[axisId].currentQuestions[0]?.id,
           ),
           currentSteps: [],
+          hasMoreQuestions: false,
         },
       }))
     },
