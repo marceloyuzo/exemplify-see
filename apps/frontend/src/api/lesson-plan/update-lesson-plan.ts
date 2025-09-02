@@ -20,6 +20,10 @@ interface UpdateLessonPlanProps {
   axes: LessonPlanAxis[]
 }
 
+export interface LessonPlanResponse {
+  id: string
+}
+
 export async function updateLessonPlan({
   lessonPlanId,
   title,
@@ -37,7 +41,7 @@ export async function updateLessonPlan({
   example,
   subjectId,
   topicId,
-}: UpdateLessonPlanProps) {
+}: UpdateLessonPlanProps): Promise<LessonPlanResponse> {
   const response = await api.patch(
     `/lesson-plan/${lessonPlanId}`,
     {

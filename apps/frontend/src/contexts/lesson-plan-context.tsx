@@ -20,8 +20,12 @@ import {
 } from '@/api/lesson-plan/create-lesson-plan'
 import { toast } from 'sonner'
 import { getLessonPlanDetailed } from '@/api/lesson-plan/get-lesson-plan-detailed'
-import { updateLessonPlan } from '@/api/lesson-plan/update-lesson-plan'
+import {
+  LessonPlanResponse,
+  updateLessonPlan,
+} from '@/api/lesson-plan/update-lesson-plan'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { generatePdf } from '@/api/lesson-plan/generate-pdf'
 
 // Schema para o formulário de metadados do plano de aula
 const lessonPlanMetadataSchema = z.object({
@@ -110,8 +114,11 @@ interface LessonPlanContextType {
   goToPreviousQuestion: (axisId: string) => void
 
   // Lesson plan management
-  saveLessonPlan: () => Promise<void>
+  saveLessonPlan: () => Promise<LessonPlanResponse | undefined>
   resetAllForms: () => void
+  generateLessonPlanPdf: () => Promise<void>
+
+  isGeneratingPdf: boolean
 
   // Global states
   isSaving: boolean
@@ -350,14 +357,6 @@ export function LessonPlanProvider({
   const reconstructAxisData = useCallback(async () => {
     if (!existingLessonPlan || !rootQueries.data) return
 
-    console.log('Iniciando reconstrução dos eixos...', {
-      axisIds,
-      existingAxes: existingLessonPlan.axes.map((a) => ({
-        id: a.axisId,
-        answersCount: a.answers?.length || 0,
-      })),
-    })
-
     const newAxisStates: Record<string, AxisState> = {}
 
     for (const axisId of axisIds) {
@@ -367,7 +366,6 @@ export function LessonPlanProvider({
       const axisData = existingLessonPlan.axes.find((a) => a.axisId === axisId)
 
       if (!rootQuestion) {
-        console.warn(`Root question não encontrada para eixo ${axisId}`)
         continue
       }
 
@@ -385,10 +383,6 @@ export function LessonPlanProvider({
 
           // Verificar se a resposta corresponde à pergunta atual
           if (answer.questionId === currentQuestion.id) {
-            console.log(
-              `Resposta ${answer.answerId} corresponde à pergunta ${currentQuestion.id}`,
-            )
-
             // Se não é a última resposta, buscar próxima pergunta
             if (i < axisData.answers.length - 1) {
               try {
@@ -403,26 +397,13 @@ export function LessonPlanProvider({
                     currentQuestions.push(nextQuestion)
                     questionsHistory.push(nextQuestion.id)
                     currentQuestion = nextQuestion
-                    console.log(
-                      `Próxima pergunta adicionada: ${nextQuestion.id}`,
-                    )
                   } else {
-                    console.warn(
-                      `Inconsistência: próxima pergunta ${nextQuestion.id} não corresponde à próxima resposta ${nextAnswer.questionId}`,
-                    )
                     break
                   }
                 } else {
-                  console.warn(
-                    `Não foi possível buscar próxima pergunta para answer ${answer.answerId}`,
-                  )
                   break
                 }
               } catch (error) {
-                console.error(
-                  `Erro ao buscar próxima pergunta para answer ${answer.answerId}:`,
-                  error,
-                )
                 break
               }
             } else {
@@ -433,25 +414,12 @@ export function LessonPlanProvider({
                   description: step.description,
                   order: step.order,
                 }))
-                console.log(
-                  `Steps carregados para ${axisId}:`,
-                  currentSteps.length,
-                )
               }
             }
           } else {
-            console.error(
-              `Resposta ${answer.questionId} não corresponde à pergunta atual ${currentQuestion.id}`,
-            )
             break
           }
         }
-
-        console.log(`Eixo ${axisId} reconstruído com sucesso:`, {
-          questionsCount: currentQuestions.length,
-          historyCount: questionsHistory.length,
-          stepsCount: currentSteps.length,
-        })
       }
 
       newAxisStates[axisId] = {
@@ -464,17 +432,12 @@ export function LessonPlanProvider({
       }
     }
 
-    console.log(
-      'Definindo novos estados dos eixos:',
-      Object.keys(newAxisStates),
-    )
     setAxisStates(newAxisStates)
   }, [existingLessonPlan, rootQueries.data, axisIds])
 
   useEffect(() => {
     const reconstructData = async () => {
       if (isEditing && isDataLoaded && rootQueries.data && existingLessonPlan) {
-        console.log('Iniciando reconstrução dos dados do eixo...')
         await reconstructAxisData()
       }
     }
@@ -794,8 +757,21 @@ export function LessonPlanProvider({
         }
       },
       onError: (error) => {
-        console.error('Erro ao salvar plano de aula:', error)
-        toast.error('Erro ao salvar plano de aula. Tente novamente.')
+        toast.error(
+          `Erro ao salvar plano de aula. Tente novamente. Error: ${error}`,
+        )
+      },
+    })
+
+  // Mutation para gerar PDF
+  const { mutateAsync: generatePdfAsync, isPending: isGeneratingPdf } =
+    useMutation({
+      mutationFn: generatePdf,
+      onSuccess: () => {
+        toast.success('PDF gerado com sucesso!')
+      },
+      onError: (error) => {
+        toast.error(`Erro ao gerar PDF. Tente novamente. ${error}`)
       },
     })
 
@@ -870,11 +846,13 @@ export function LessonPlanProvider({
         ...(shouldUpdate && { lessonPlanId }),
       }
 
-      await saveLessonPlanMutation(payload)
+      const lessonPlanResponse = await saveLessonPlanMutation(payload)
 
       if (shouldCreate) {
         resetAllForms()
       }
+
+      return lessonPlanResponse
     } catch (error) {
       // Erro já tratado no onError
     }
@@ -887,6 +865,89 @@ export function LessonPlanProvider({
     saveLessonPlanMutation,
     shouldUpdate,
     shouldCreate,
+    lessonPlanId,
+  ])
+
+  const generateLessonPlanPdf = useCallback(async () => {
+    // Validar formulário de metadados
+    const metadataValid = await metadataForm.trigger()
+    if (!metadataValid) {
+      toast.error('Por favor, preencha todos os campos obrigatórios')
+      return
+    }
+
+    const metadataValues = metadataForm.getValues()
+    const axes: LessonPlanAxis[] = []
+
+    for (const axisId of axisIds) {
+      const axisData = getAxisData(axisId)
+
+      if (axisData.isCompleted) {
+        const answers = []
+
+        for (const question of axisData.currentQuestions) {
+          const answerId = axisData.currentAnswers[question.id]
+          if (answerId) {
+            const steps = axisData.getStepsForAnswer(question.id, answerId)
+
+            answers.push({
+              questionId: question.id,
+              answerId,
+              steps: steps.map((step, index) => ({
+                title: step.title,
+                description: step.description,
+                order: step.order || index,
+              })),
+            })
+          }
+        }
+
+        if (answers.length > 0) {
+          axes.push({
+            axisId,
+            answers,
+          })
+        }
+      }
+    }
+
+    if (axes.length === 0) {
+      toast.error(
+        'Nenhum eixo foi preenchido. Complete pelo menos um eixo antes de gerar o PDF.',
+      )
+      return
+    }
+
+    const payload = {
+      title: metadataValues.title,
+      description: metadataValues.description || undefined,
+      subjectId: metadataValues.subjectId,
+      topicId: metadataValues.topicId,
+      complexity: metadataValues.complexity,
+      year: metadataValues.year,
+      workload: metadataValues.workload,
+      modality: metadataValues.modality,
+      contents: metadataValues.contents,
+      materials: metadataValues.materials,
+      priorKnowledge: metadataValues.priorKnowledge,
+      example: metadataValues.example,
+      isPublic: metadataValues.isPublic,
+      approachId,
+      axes,
+      ...(isEditing && { lessonPlanId }),
+    }
+    try {
+      await generatePdfAsync(payload)
+    } catch (error) {
+      // Erro já tratado no onError do mutation
+    }
+  }, [
+    metadataForm,
+    approachId,
+    axisIds,
+    getAxisData,
+    generatePdfAsync,
+    isEditing,
     lessonPlanId,
   ])
 
@@ -922,6 +983,7 @@ export function LessonPlanProvider({
     resetAxis,
     goToPreviousQuestion,
     saveLessonPlan,
+    generateLessonPlanPdf,
     resetAllForms,
     isSaving: isSaving || isLoadingExisting,
     isAnyFormCompleted,
@@ -932,6 +994,7 @@ export function LessonPlanProvider({
     originalAuthorId,
     currentUserId,
     isDataLoaded: isDataLoaded && !isLoadingExisting,
+    isGeneratingPdf,
   }
 
   return (

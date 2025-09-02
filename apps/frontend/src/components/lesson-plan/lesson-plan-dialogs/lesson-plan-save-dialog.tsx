@@ -48,7 +48,7 @@ export default function LessonPlanSaveDialog({
 
   const handleSave = async () => {
     try {
-      await saveLessonPlan()
+      const lessonPlan = await saveLessonPlan()
 
       queryClient.invalidateQueries({
         queryKey: ['repository-lesson-plans'],
@@ -56,7 +56,7 @@ export default function LessonPlanSaveDialog({
 
       setIsOpen(false)
 
-      router.push('/repositorio/planos-de-aula')
+      router.push(`/plano-de-aula?lessonPlanId=${lessonPlan?.id}`)
     } catch (error) {
       // O erro já é tratado no hook
     }

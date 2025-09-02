@@ -14,6 +14,7 @@ import { ModelModule } from './resources/model/model.module'
 import { ExampleModule } from './resources/example/example.module'
 import { RatingModule } from './resources/rating/rating.module'
 import { AttachmentModule } from './resources/attachment/attachment.module'
+import { PdfModule } from './resources/pdf/pdf.module'
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AttachmentModule } from './resources/attachment/attachment.module'
     ExampleModule,
     RatingModule,
     AttachmentModule,
+    PdfModule,
   ],
   controllers: [AppController],
   providers: [],

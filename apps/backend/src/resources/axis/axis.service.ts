@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { Axis } from '@prisma/client'
 import { PrismaService } from 'src/database/services/prisma.service'
 
 interface CreateAxisProps {
@@ -150,5 +151,15 @@ export class AxisService {
     })
 
     return axisUpdated
+  }
+
+  async findById(id: string): Promise<Axis | null> {
+    const axis = await this.prisma.axis.findUnique({
+      where: {
+        id,
+      },
+    })
+
+    return axis
   }
 }

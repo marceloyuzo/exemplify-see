@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { Topic } from '@prisma/client'
 import { PrismaService } from 'src/database/services/prisma.service'
 
 interface CreateTopicProps {
@@ -70,6 +71,16 @@ export class TopicService {
       },
       data: {
         title,
+      },
+    })
+
+    return topic
+  }
+
+  async findById(id: string): Promise<Topic | null> {
+    const topic = await this.prisma.topic.findUnique({
+      where: {
+        id,
       },
     })
 

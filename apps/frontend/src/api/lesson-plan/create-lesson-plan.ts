@@ -35,6 +35,10 @@ export interface CreateLessonPlanProps {
   axes: LessonPlanAxis[]
 }
 
+interface LessonPlanResponse {
+  id: string
+}
+
 export async function createLessonPlan({
   title,
   description,
@@ -51,7 +55,7 @@ export async function createLessonPlan({
   example,
   subjectId,
   topicId,
-}: CreateLessonPlanProps) {
+}: CreateLessonPlanProps): Promise<LessonPlanResponse> {
   const response = await api.post(
     '/lesson-plan',
     {

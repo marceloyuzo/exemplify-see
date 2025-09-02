@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { Approach, Prisma } from '@prisma/client'
 import { PrismaService } from 'src/database/services/prisma.service'
 
 interface CreateApproachProps {
@@ -162,5 +162,15 @@ export class ApproachService {
         totalPages: Math.ceil(total / perPage),
       },
     }
+  }
+
+  async findById(id: string): Promise<Approach | null> {
+    const approach = await this.prisma.approach.findUnique({
+      where: {
+        id,
+      },
+    })
+
+    return approach
   }
 }
