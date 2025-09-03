@@ -1,34 +1,54 @@
-# Stage 1: Build
-FROM node:22-alpine AS builder
+# Stage 1: Pruner (para monorepo)
+FROM node:22-alpine AS pruner
+
 WORKDIR /app
 
-# Copia apenas arquivos de dependências e instala
-COPY package.json yarn.lock ./
+# Instala Turbo para prune do monorepo
+RUN yarn global add turbo@^2
+
+# Copia tudo e gera o prune apenas do backend
+COPY . .
+RUN turbo prune --scope=backend-exemplify-see --docker
+
+# Stage 2: Builder
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+COPY .gitignore .gitignore
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/yarn.lock ./yarn.lock
+
 RUN yarn install --frozen-lockfile
 
-# Copia backend
-COPY apps/backend ./apps/backend
-WORKDIR /app/apps/backend
+COPY --from=pruner /app/out/full/ .
 
-# Build do NestJS
+RUN yarn db:generate
+
 RUN yarn build
 
-# Stage 2: Runtime
-FROM node:22-alpine
+# Stage 3: Runner
+FROM node:22-alpine AS runner
+
 WORKDIR /app
 
-# Copia build e package.json
-COPY --from=builder /app/apps/backend/dist ./dist
-COPY --from=builder /app/apps/backend/package.json ./
-COPY --from=builder /app/yarn.lock ./
+COPY .gitignore .gitignore
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/yarn.lock ./yarn.lock
 
-# Instala apenas dependências de produção
-RUN yarn install --production --frozen-lockfile
+RUN yarn install --pure-lockfile --production
 
-# Definindo variáveis de ambiente
-ENV NODE_ENV=production
-ENV DATABASE_URL=${DATABASE_URL}
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nodejs
 
-# Start command
-# Sem aumentar heap, para não ultrapassar 512MB
-CMD ["node", "dist/main.js"]
+COPY --from=pruner --chown=nodejs:nodejs /app/out/full/ .
+COPY --from=builder --chown=nodejs:nodejs /app/apps/backend/dist ./apps/backend/dist
+
+WORKDIR /app/apps/backend
+USER nodejs
+EXPOSE 3000
+
+RUN mv ./prisma/migrate.sh ./migrate.sh && chmod +x migrate.sh
+
+CMD [ "node", "dist/src/main.js" ]
+

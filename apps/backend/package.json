@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "author": "",
+  "packageManager": "yarn@1.22.22",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
