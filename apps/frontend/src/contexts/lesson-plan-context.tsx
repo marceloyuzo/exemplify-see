@@ -27,7 +27,6 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation'
 import { generatePdf } from '@/api/lesson-plan/generate-pdf'
 
-// Schema para o formulário de metadados do plano de aula
 const lessonPlanMetadataSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().optional(),
