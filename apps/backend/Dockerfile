@@ -23,7 +23,7 @@ RUN yarn install --frozen-lockfile
 
 COPY --from=pruner /app/out/full/ .
 
-RUN yarn db:generate
+RUN yarn workspace backend-exemplify-see prisma generate
 
 RUN yarn build
 
