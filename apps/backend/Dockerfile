@@ -43,7 +43,8 @@ RUN adduser --system --uid 1001 nodejs
 
 COPY --from=pruner --chown=nodejs:nodejs /app/out/full/ .
 COPY --from=builder --chown=nodejs:nodejs /app/apps/backend/dist ./apps/backend/dist
-COPY --from=builder --chown=nodejs:nodejs /app/apps/backend/node_modules/@prisma/client ./apps/backend/node_modules/@prisma/client
+COPY --from=builder --chown=nodejs:nodejs /app/apps/backend/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nodejs:nodejs /app/apps/backend/node_modules/.prisma ./node_modules/.prisma
 
 WORKDIR /app/apps/backend
 USER nodejs
