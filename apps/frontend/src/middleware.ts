@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server'
 export function middleware(request: NextRequest) {
   // Obtém o token dos cookies
   const accessToken = request.cookies.get('accessToken')?.value
-  console.log(accessToken)
 
   // Define as rotas que precisam de autenticação
   const protectedRoutes = [
