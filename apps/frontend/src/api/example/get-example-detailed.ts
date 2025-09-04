@@ -41,7 +41,7 @@ export interface GetExampleDetailedResponse {
   author: Author
   topic: Topic
   attachment: Attachment[]
-  averageRating: number
+  averageRating: number | null
 }
 
 export async function getExampleDetailed({

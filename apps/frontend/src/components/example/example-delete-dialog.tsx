@@ -1,3 +1,5 @@
+'use client'
+
 import { Dispatch, SetStateAction } from 'react'
 import {
   AlertDialog,
@@ -16,6 +18,7 @@ import axios, { AxiosError } from 'axios'
 import { deleteExample, DeleteExampleProps } from '@/api/example/delete-example'
 import { ExampleResponseAdmin } from '@/api/example/find-examples-admin'
 import { GetExampleDetailedResponse } from '@/api/example/get-example-detailed'
+import { useRouter } from 'next/navigation'
 
 interface ExampleDeleteDialogProps {
   exampleToDelete: ExampleResponseAdmin | null | GetExampleDetailedResponse
@@ -30,6 +33,7 @@ export default function ExampleDeleteDialog({
   exampleToDelete,
   setExampleToDelete,
 }: ExampleDeleteDialogProps) {
+  const router = useRouter()
   const queryClient = useQueryClient()
 
   const { mutateAsync: delExample } = useMutation({
@@ -58,6 +62,8 @@ export default function ExampleDeleteDialog({
       })
 
       setOpen(false)
+
+      router.push('/repositorio/exemplos')
       if (setExampleToDelete) setExampleToDelete(null)
     } catch (err) {
       if (axios.isAxiosError(err)) {

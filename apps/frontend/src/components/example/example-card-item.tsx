@@ -25,6 +25,7 @@ interface ExampleCardItemProps {
   description: string
   createdAt: string
   user: User
+  averageRating: number | null
 }
 
 export default function ExampleCardItem({
@@ -33,6 +34,7 @@ export default function ExampleCardItem({
   description,
   createdAt,
   user,
+  averageRating,
 }: ExampleCardItemProps) {
   const router = useRouter()
   const dateFormatted = format(new Date(createdAt), "d 'de' MMMM 'de' yyyy", {
@@ -70,7 +72,9 @@ export default function ExampleCardItem({
             </Avatar>
             <Label>{user.name}</Label>
           </div>
-          <span className="font-bold text-primary">4.5</span>
+          <span className="font-bold text-primary">
+            {averageRating || 'N/A'}
+          </span>
         </CardFooter>
       </Card>
     </>

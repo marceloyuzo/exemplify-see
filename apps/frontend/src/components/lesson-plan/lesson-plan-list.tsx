@@ -422,6 +422,7 @@ export default function LessonPlanList({ myLessons }: LessonPlanListProps) {
               description={lessonPlan.description}
               createdAt={lessonPlan.createdAt}
               user={lessonPlan.user}
+              averageRating={lessonPlan.averageRating}
             />
           ))}
         </div>

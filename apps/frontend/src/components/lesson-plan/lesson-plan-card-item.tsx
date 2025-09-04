@@ -25,6 +25,7 @@ interface LessonPlanCardItemProps {
   description: string
   createdAt: string
   user: User
+  averageRating: number | null
 }
 
 export default function LessonPlanCardItem({
@@ -33,6 +34,7 @@ export default function LessonPlanCardItem({
   description,
   createdAt,
   user,
+  averageRating,
 }: LessonPlanCardItemProps) {
   const router = useRouter()
   const dateFormatted = format(new Date(createdAt), "d 'de' MMMM 'de' yyyy", {
@@ -70,7 +72,9 @@ export default function LessonPlanCardItem({
             </Avatar>
             <Label>{user.name}</Label>
           </div>
-          <span className="font-bold text-primary">4.5</span>
+          <span className="font-bold text-primary">
+            {averageRating || 'N/A'}
+          </span>
         </CardFooter>
       </Card>
     </>

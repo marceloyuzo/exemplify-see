@@ -217,6 +217,7 @@ export default function FormCriacaoExemplo() {
                   options={[
                     { label: 'Correto', value: 'correct' },
                     { label: 'Errôneo', value: 'erroneous' },
+                    { label: 'Ambos', value: 'both' },
                   ]}
                   value={field.value}
                   onValueChange={field.onChange}

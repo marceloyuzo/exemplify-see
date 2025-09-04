@@ -61,7 +61,7 @@ export interface GetLessonPlanByIdResponse {
   complexityLabel: string
   exampleLabel: string
   modalityLabel: string
-  averageRating: number
+  averageRating: number | null
 }
 
 export async function getLessonPlanDetailed({

@@ -26,6 +26,7 @@ export interface ExampleResponse {
     id: string
     title: string
   }
+  averageRating: number | null
 }
 
 export interface FindExamplesResponse {

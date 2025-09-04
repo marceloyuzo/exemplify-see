@@ -42,7 +42,7 @@ export default function RepositorioExemplosPage() {
         </h2>
 
         <Suspense fallback={<div>Carregando planos de aula...</div>}>
-          <ExampleList myLessons={false} />
+          <ExampleList />
         </Suspense>
       </div>
     </>

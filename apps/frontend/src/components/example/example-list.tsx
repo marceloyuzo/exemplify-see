@@ -13,8 +13,8 @@ import { SelectOverlapping } from '@/components/ui/select-overlapping'
 import { getTopicOptions } from '@/api/topic/get-topic-options'
 import { InputAnimated } from '@/components/ui/input-animated'
 import { useDebounce } from 'use-debounce'
-import ExampleCardItem from '@/components/lesson-plan/lesson-plan-card-item'
 import { findExamples } from '@/api/example/find-examples'
+import ExampleCardItem from './example-card-item'
 
 const handleFilterExampleSchema = z.object({
   title: z.string().optional(),
@@ -23,11 +23,7 @@ const handleFilterExampleSchema = z.object({
   exampleType: z.string().optional(),
 })
 
-interface ExampleListProps {
-  myLessons: boolean
-}
-
-export default function ExampleList({ myLessons }: ExampleListProps) {
+export default function ExampleList() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -154,7 +150,6 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
       subjectId,
       topicId,
       exampleType,
-      myLessons,
     ],
     queryFn: () =>
       findExamples({
@@ -250,7 +245,7 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
               Nenhum dado disponível
             </p>
             <p className="text-xs text-muted-foreground">
-              Não foi possível carregar os planos de aula
+              Não foi possível carregar os exemplos
             </p>
           </div>
         </div>
@@ -351,6 +346,7 @@ export default function ExampleList({ myLessons }: ExampleListProps) {
               description={example.description}
               createdAt={example.createdAt}
               user={example.author}
+              averageRating={example.averageRating}
             />
           ))}
         </div>

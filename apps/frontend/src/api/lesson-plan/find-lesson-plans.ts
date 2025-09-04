@@ -23,6 +23,7 @@ export interface FindLessonPlansResponse {
       name: string
       photoURL: string
     }
+    averageRating: number | null
   }[]
   meta: {
     total: number

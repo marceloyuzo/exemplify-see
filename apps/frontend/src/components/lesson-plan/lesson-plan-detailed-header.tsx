@@ -7,7 +7,7 @@ import {
 
 interface LessonPlanHeaderProps {
   title: string
-  rating: number
+  rating: number | null
   createdAt: string
   updatedAt: string
 }
@@ -29,7 +29,7 @@ export default function LessonPlanDetailedHeader({
           </div>
           <div className="text-lg font-semibold">
             <span>
-              Nota: <span className="text-primary">{rating}</span>
+              Nota: <span className="text-primary">{rating || 'N/A'}</span>
             </span>
           </div>
         </CardDescription>

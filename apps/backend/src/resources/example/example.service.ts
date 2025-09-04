@@ -118,10 +118,20 @@ export class ExampleService {
         : { createdAt: orderBy === 'asc' ? 'asc' : 'desc' },
     })
 
+    const examplesWithRating = await Promise.all(
+      examples.map(async (example) => {
+        const rating = await this.prisma.rating.aggregate({
+          where: { exampleId: example.id },
+          _avg: { rate: true },
+        })
+        return { ...example, averageRating: rating._avg?.rate ?? null }
+      }),
+    )
+
     const total = await this.prisma.example.count({ where })
 
     return {
-      data: examples,
+      data: examplesWithRating,
       meta: {
         total,
         page,
@@ -249,18 +259,6 @@ export class ExampleService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.exampleModel.deleteMany({
-        where: { exampleId },
-      })
-
-      await tx.rating.deleteMany({
-        where: { exampleId },
-      })
-
-      tx.example.delete({
-        where: { id: exampleId },
-      })
-
       if (example.attachment?.length) {
         await Promise.all(
           example.attachment.map((att) =>
@@ -268,6 +266,11 @@ export class ExampleService {
           ),
         )
       }
+
+      await tx.rating.deleteMany({ where: { exampleId } })
+      await tx.exampleModel.deleteMany({ where: { exampleId } })
+
+      await tx.example.delete({ where: { id: exampleId } })
     })
   }
 
