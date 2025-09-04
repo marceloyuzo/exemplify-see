@@ -24,9 +24,11 @@ async function bootstrap() {
   })
 
   app.use(cookieParser())
-  const port = process.env.PORT || 3030
-  await app.listen(port)
 
-  logger.log(`🚀 Backend rodando na porta ${port}`)
+  const port = process.env.PORT || 3030
+  const host = process.env.HOST || '0.0.0.0'
+  await app.listen(port, host)
+
+  logger.log(`🚀 Backend rodando em ${host}:${port}`)
 }
 bootstrap()
