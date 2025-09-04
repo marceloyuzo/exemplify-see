@@ -178,7 +178,17 @@ export class LessonPlanService {
       },
     })
 
-    return lessonsPlans
+    const lessonPlansWithRating = await Promise.all(
+      lessonsPlans.map(async (plan) => {
+        const rating = await this.prisma.rating.aggregate({
+          where: { lessonPlanId: plan.id },
+          _avg: { rate: true },
+        })
+        return { ...plan, averageRating: rating._avg?.rate ?? null }
+      }),
+    )
+
+    return lessonPlansWithRating
   }
 
   async getLessonPlanById(id: string, userId: string) {

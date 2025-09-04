@@ -15,7 +15,7 @@ import { getSubjectOptions } from '@/api/subject/get-subject.options'
 import { getTopicOptions } from '@/api/topic/get-topic-options'
 import { InputAnimated } from '@/components/ui/input-animated'
 import { useDebounce } from 'use-debounce'
-import LessonPlanCardItem from '@/components/lesson-plan/lesson-plan-card-item'
+import LessonPlanCardItem from './lesson-plan-card-item'
 
 const handleFilterLessonPlanSchema = z.object({
   title: z.string().optional(),

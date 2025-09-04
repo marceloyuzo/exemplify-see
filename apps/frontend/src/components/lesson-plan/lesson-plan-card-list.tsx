@@ -84,6 +84,7 @@ export default function LessonPlanCardList({
                   description={lessonPlan.description}
                   createdAt={lessonPlan.createdAt}
                   user={lessonPlan.user}
+                  averageRating={lessonPlan.averageRating}
                 />
               </div>
             </CarouselItem>

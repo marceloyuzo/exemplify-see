@@ -14,6 +14,7 @@ export interface GetHighlightsLessonResponse {
     name: string
     photoURL: string
   }
+  averageRating: number | null
 }
 
 export async function getHighlightsLessonPlans({
