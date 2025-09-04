@@ -1,0 +1,6 @@
+.dockerignore
+logs
+*.md
+.cache
+node_modules
+**/node_modules

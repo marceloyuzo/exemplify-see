@@ -44,8 +44,8 @@ export class AuthController {
 
       res.cookie('accessToken', result.accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production', // obrigatório para SameSite=None
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // permite cross-site
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
       })
 
@@ -71,7 +71,11 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res() res: Response): Promise<void> {
-    res.clearCookie('accessToken')
+    res.clearCookie('accessToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    })
 
     res.status(HttpStatus.OK).json({
       success: true,

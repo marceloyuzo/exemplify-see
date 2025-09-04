@@ -13,8 +13,11 @@ interface TokenPayload {
   exp: number
 }
 
-const PUBLIC_ROUTES = ['/login', '/register']
-const ADMIN_ROUTES = ['/painel-administrador/usuarios']
+// Rotas que qualquer pessoa pode acessar, token ou não
+const PUBLIC_ROUTES = ['/login', '/register', '/', '/etapas-da-abordagem']
+
+// Rotas que apenas admin pode acessar
+const ADMIN_ROUTES = ['/painel-administrador']
 
 export function middleware(req: NextRequest) {
   const token = req.cookies.get('accessToken')?.value
@@ -22,6 +25,7 @@ export function middleware(req: NextRequest) {
 
   let isAdmin = false
 
+  // Decodifica o token se existir
   if (token) {
     try {
       const decoded = jwtDecode<TokenPayload>(token)
@@ -33,21 +37,23 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // Bloqueia acesso a páginas privadas sem token
-  if (!token && !PUBLIC_ROUTES.includes(url.pathname)) {
+  // 1️⃣ Rotas públicas: sempre acessível, token ou não
+  if (PUBLIC_ROUTES.includes(url.pathname)) {
+    return NextResponse.next()
+  }
+
+  // 2️⃣ Rotas privadas: só admin pode acessar
+  if (ADMIN_ROUTES.some((path) => url.pathname.startsWith(path))) {
+    if (!token || !isAdmin) {
+      url.pathname = '/' // ou '/' se preferir
+      return NextResponse.redirect(url)
+    }
+    return NextResponse.next()
+  }
+
+  // 3️⃣ Demais rotas privadas: só precisa estar logado (token válido)
+  if (!token) {
     url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  // Bloqueia acesso ao painel admin se não for admin
-  if (ADMIN_ROUTES.some((path) => url.pathname.startsWith(path)) && !isAdmin) {
-    url.pathname = '/'
-    return NextResponse.redirect(url)
-  }
-
-  // Bloqueia usuário autenticado de acessar rotas públicas
-  if (token && PUBLIC_ROUTES.includes(url.pathname)) {
-    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 

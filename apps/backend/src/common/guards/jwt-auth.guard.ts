@@ -60,8 +60,8 @@ export class JwtAuthGuard implements CanActivate {
 
         response.cookie('accessToken', newToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production', // deve ser true em prod
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // permite cross-site
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
         })
       }
@@ -75,7 +75,7 @@ export class JwtAuthGuard implements CanActivate {
       response.clearCookie('accessToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       })
 
       throw new UnauthorizedException('Token inválido ou expirado')
