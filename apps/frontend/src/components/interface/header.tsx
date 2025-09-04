@@ -1,29 +1,29 @@
 'use client'
 
-import { useId } from 'react'
-import { GlobeIcon } from 'lucide-react'
+// import { useId } from 'react'
+// import { GlobeIcon } from 'lucide-react'
 
 import Logo from '@/components/icon/logo'
 import UserMenu from '@/components/interface/user-menu'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
 import ThemeToggle from '@/theme/theme-toggle'
 import { SidebarTrigger } from '../ui/sidebar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 
-const languages = [
-  { value: 'pt-BR', label: 'Pt-BR' },
-  { value: 'en', label: 'En' },
-]
+// const languages = [
+//   { value: 'pt-BR', label: 'Pt-BR' },
+//   { value: 'en', label: 'En' },
+// ]
 
 export default function Header() {
-  const id = useId()
+  // const id = useId()
   const router = useRouter()
 
   return (
@@ -47,7 +47,7 @@ export default function Header() {
                 onClick={() => router.push('/')}
               >
                 <Logo />
-                <span className="font-semibold tracking-wide bg-[linear-gradient(to_right,var(--primary),var(--secondary))] bg-clip-text text-transparent">
+                <span className="font-bold tracking-wide bg-[linear-gradient(to_right,var(--primary),var(--secondary))] bg-clip-text text-transparent">
                   PORTAL EXEMPLIFY-SEE
                 </span>
               </a>
@@ -56,7 +56,7 @@ export default function Header() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Select defaultValue="en">
+            {/* <Select defaultValue="en">
               <SelectTrigger
                 id={`language-${id}`}
                 className="cursor-pointer [&>svg]:text-muted-foreground/80 hover:bg-accent hover:text-accent-foreground h-8 border-none px-2 shadow-none [&>svg]:shrink-0"
@@ -72,7 +72,7 @@ export default function Header() {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
             <UserMenu />
           </div>
         </div>

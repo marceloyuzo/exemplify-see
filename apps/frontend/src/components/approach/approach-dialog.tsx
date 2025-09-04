@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '../ui/dialog'
 import { InputAnimated } from '../ui/input-animated'
 import { useForm } from 'react-hook-form'
@@ -85,9 +84,6 @@ export default function ApproachDialog({ open, setOpen }: ApproachDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="default">Adicionar</Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form
           onSubmit={handleSubmit(handleCreateNewApproach)}

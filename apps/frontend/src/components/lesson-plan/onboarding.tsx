@@ -58,9 +58,9 @@ const stepContent = [
 ]
 
 export default function OnBoarding() {
-  const [isOpen, setIsOpen] = useState<boolean>(false)
-  const [step, setStep] = useState(1)
   const { user } = useUser()
+  const [isOpen, setIsOpen] = useState<boolean | undefined>(user?.firstTime)
+  const [step, setStep] = useState(1)
   const queryClient = useQueryClient()
 
   const totalSteps = stepContent.length
@@ -89,11 +89,7 @@ export default function OnBoarding() {
   }
 
   return (
-    <Dialog
-      defaultOpen={!!user?.firstTime}
-      open={isOpen}
-      onOpenChange={setIsOpen}
-    >
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Onboarding</Button>
       </DialogTrigger>
