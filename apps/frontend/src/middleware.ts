@@ -1,59 +1,68 @@
 // middleware.ts
-import { NextResponse } from 'next/server'
-// import type { NextRequest } from 'next/server'
-// import { jwtDecode } from 'jwt-decode'
+import { NextRequest, NextResponse } from 'next/server'
 
-// interface TokenPayload {
-//   sub: string
-//   email: string
-//   firebaseUid: string
-//   role: 'admin' | 'user'
-//   photoURL: string
-//   iat: number
-//   exp: number
-// }
+export function middleware(request: NextRequest) {
+  // Obtém o token dos cookies
+  const accessToken = request.cookies.get('accessToken')?.value
 
-// Rotas que qualquer pessoa pode acessar, token ou não
-// const PUBLIC_ROUTES = ['/login', '/register', '/', '/etapas-da-abordagem']
+  // Define as rotas que precisam de autenticação
+  const protectedRoutes = [
+    '/plano-de-aula',
+    '/repositorio',
+    '/painel-administrador',
+    // Adicione aqui outras rotas que precisam de proteção
+  ]
 
-// // Rotas que apenas admin pode acessar
-// const ADMIN_ROUTES = ['/painel-administrador']
+  // Define rotas públicas (que não precisam de autenticação)
+  // const publicRoutes = [
+  //   '/login',
+  //   '/register',
+  //   '/forgot-password',
+  //   '/',
+  //   '/about',
+  //   // Adicione aqui outras rotas públicas
+  // ]
 
-export function middleware() {
-  // const token = req.cookies.get('accessToken')?.value
-  // const url = req.nextUrl.clone()
-  // let isAdmin = false
-  // // Decodifica o token se existir
-  // if (token) {
-  //   try {
-  //     const decoded = jwtDecode<TokenPayload>(token)
-  //     isAdmin = decoded.role === 'admin'
-  //   } catch (err) {
-  //     // token inválido, tratar como não autenticado
-  //     url.pathname = '/login'
-  //     return NextResponse.redirect(url)
-  //   }
-  // }
-  // // 1️⃣ Rotas públicas: sempre acessível, token ou não
-  // if (PUBLIC_ROUTES.includes(url.pathname)) {
-  //   return NextResponse.next()
-  // }
-  // // 2️⃣ Rotas privadas: só admin pode acessar
-  // if (ADMIN_ROUTES.some((path) => url.pathname.startsWith(path))) {
-  //   if (!token || !isAdmin) {
-  //     url.pathname = '/' // ou '/' se preferir
-  //     return NextResponse.redirect(url)
-  //   }
-  //   return NextResponse.next()
-  // }
-  // // 3️⃣ Demais rotas privadas: só precisa estar logado (token válido)
-  // if (!token) {
-  //   url.pathname = '/login'
-  //   return NextResponse.redirect(url)
-  // }
+  const { pathname } = request.nextUrl
+
+  // Verifica se a rota atual é protegida
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route),
+  )
+
+  // Verifica se a rota atual é pública
+  // const isPublicRoute = publicRoutes.some(
+  //   (route) => pathname === route || pathname.startsWith(route),
+  // )
+
+  // Se é uma rota protegida e não tem token, redireciona para login
+  if (isProtectedRoute && !accessToken) {
+    const loginUrl = new URL('/login', request.url)
+    // Adiciona a URL atual como parâmetro para redirect após login
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // Se tem token e está tentando acessar páginas de auth, redireciona para dashboard
+  if (accessToken && (pathname === '/login' || pathname === '/register')) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  // Para todas as outras situações, permite o acesso
   return NextResponse.next()
 }
 
+// Configuração do matcher - define em quais rotas o middleware deve executar
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
