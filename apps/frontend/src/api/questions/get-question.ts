@@ -7,7 +7,7 @@ interface GetQuestionParams {
 interface Step {
   id: string
   title: string
-  description: string
+  description?: string
   order: number
 }
 

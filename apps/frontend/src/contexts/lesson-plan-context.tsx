@@ -53,7 +53,7 @@ export type LessonPlanMetadataFormData = z.infer<
 
 interface Step {
   title: string
-  description: string
+  description?: string
   order: number
 }
 

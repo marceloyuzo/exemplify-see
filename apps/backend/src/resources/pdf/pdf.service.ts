@@ -12,7 +12,7 @@ type ExampleType = 'correct' | 'erroneous' | 'both'
 
 interface Step {
   title: string
-  description: string
+  description?: string
   order: number
 }
 

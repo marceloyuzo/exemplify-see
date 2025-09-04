@@ -6,7 +6,7 @@ import { PrismaService } from 'src/database/services/prisma.service'
 export interface StepProps {
   id: string
   title: string
-  description: string
+  description?: string
   order: number
 }
 

@@ -26,7 +26,7 @@ interface StepDialogProps {
 
 const addStepSchema = z.object({
   title: z.string().min(1, 'Título do passo é obrigatório'),
-  description: z.string().min(1, 'Descrição do passo é obrigatória'),
+  description: z.string().optional(),
 })
 
 type AddStepSchema = z.infer<typeof addStepSchema>
@@ -91,7 +91,7 @@ export default function StepDialog({
           id="step-form"
         >
           <InputAnimated
-            label="Título do passo"
+            label="Título do passo *"
             {...register('title')}
             error={errors.title}
           />

@@ -15,7 +15,8 @@ class StepDTO {
   title: string
 
   @IsString()
-  description: string
+  @IsOptional()
+  description?: string
 
   @IsNumber()
   order: number

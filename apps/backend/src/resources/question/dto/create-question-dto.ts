@@ -18,8 +18,8 @@ class StepDto {
   title: string
 
   @IsString()
-  @IsNotEmpty()
-  description: string
+  @IsOptional()
+  description?: string
 
   @IsNumber()
   @IsNotEmpty()

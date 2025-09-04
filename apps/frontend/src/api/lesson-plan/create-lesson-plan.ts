@@ -2,7 +2,7 @@ import { api } from '@/lib/axios'
 
 export interface LessonPlanStep {
   title: string
-  description: string
+  description?: string
   order: number
 }
 

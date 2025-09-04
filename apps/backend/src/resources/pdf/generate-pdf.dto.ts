@@ -34,8 +34,8 @@ class StepDto {
   title: string
 
   @IsString()
-  @IsNotEmpty()
-  description: string
+  @IsOptional()
+  description?: string
 
   @IsNumber()
   order: number

@@ -7,7 +7,7 @@ interface GetQuestionRootParam {
 export interface Steps {
   id: string
   title: string
-  description: string
+  description?: string
   order: number
 }
 

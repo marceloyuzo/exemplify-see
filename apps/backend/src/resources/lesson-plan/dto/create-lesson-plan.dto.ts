@@ -33,8 +33,8 @@ export class LessonPlanStepDto {
   title: string
 
   @IsString()
-  @IsNotEmpty()
-  description: string
+  @IsOptional()
+  description?: string
 
   @IsNotEmpty()
   order: number
