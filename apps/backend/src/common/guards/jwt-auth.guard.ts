@@ -115,7 +115,7 @@ export class JwtAuthGuard implements CanActivate {
     response.clearCookie('auth-status', {
       ...clearOptions,
       httpOnly: false,
-      // Não usar domínio - deixar o browser definir automaticamente
+      domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined,
     })
   }
 }
