@@ -101,16 +101,35 @@ export class AuthController {
     }
   }
 
-  @Get('check')
-  @UseGuards(JwtAuthGuard)
-  async checkAuth(@Req() req: Request & { user: User }) {
-    const user = req.user
+  @Get('verify')
+  async verify(@Headers('cookie') cookies: string, @Res() res: Response) {
+    try {
+      // Extrair token do cookie
+      const tokenMatch = cookies?.match(/accessToken=([^;]+)/)
+      const token = tokenMatch?.[1]
 
-    return {
-      success: true,
-      message: 'Token válido',
-      user: user.email,
-      timestamp: new Date().toISOString(),
+      if (!token) {
+        return res.status(HttpStatus.UNAUTHORIZED).json({
+          success: false,
+          message: 'Token não encontrado',
+        })
+      }
+
+      // Verificar token
+      const user = await this.authService.verifyToken(token)
+
+      res.status(HttpStatus.OK).json({
+        success: true,
+        user,
+        message: 'Token válido',
+      })
+    } catch (error) {
+      this.logger.error('❌ Erro na verificação do token:', error.message)
+
+      res.status(HttpStatus.UNAUTHORIZED).json({
+        success: false,
+        message: 'Token inválido',
+      })
     }
   }
 }
