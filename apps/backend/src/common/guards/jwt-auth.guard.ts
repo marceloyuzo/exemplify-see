@@ -62,6 +62,8 @@ export class JwtAuthGuard implements CanActivate {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production', // deve ser true em prod
           sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // permite cross-site
+          domain: '.exemplify-see.com', // necessário para cross-subdomain
+          path: '/', // igual ao cookie original
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
         })
       }
@@ -76,6 +78,8 @@ export class JwtAuthGuard implements CanActivate {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        domain: '.exemplify-see.com', // igual ao cookie original
+        path: '/', // igual ao cookie original
       })
 
       throw new UnauthorizedException('Token inválido ou expirado')

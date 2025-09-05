@@ -46,6 +46,8 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // obrigatório para SameSite=None
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // permite cross-site
+        domain: '.exemplify-see.com', // ponto inicial para incluir subdomínios
+        path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
       })
 
@@ -75,6 +77,8 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: '.exemplify-see.com', // importante para remover cookie correto
+      path: '/',
     })
 
     res.status(HttpStatus.OK).json({
