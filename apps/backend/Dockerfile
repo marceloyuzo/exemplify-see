@@ -1,12 +1,12 @@
 # Stage 1: Pruner
-FROM node:22-slim AS pruner
+FROM node:22-alpine AS pruner
 WORKDIR /app
 RUN yarn global add turbo@^2
 COPY . .
 RUN turbo prune --scope=backend-exemplify-see --docker
 
 # Stage 2: Builder
-FROM node:22-slim AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY .gitignore .gitignore
@@ -20,9 +20,11 @@ RUN yarn workspace backend-exemplify-see prisma generate
 RUN yarn build
 
 # Stage 3: Runner
-FROM node:22-slim AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
+
+RUN apk add --no-cache openssl
 
 COPY .gitignore .gitignore
 COPY --from=pruner /app/out/json/ . 
