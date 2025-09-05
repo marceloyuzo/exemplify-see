@@ -42,11 +42,26 @@ export class AuthController {
     try {
       const result = await this.authService.login({ firebaseToken: token })
 
-      res.cookie('accessToken', result.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // obrigatório para SameSite=None
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // permite cross-site
+      // Configuração base dos cookies
+      const cookieOptions = {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
+        path: '/',
+      } as const
+
+      // Cookie do token (HttpOnly para segurança)
+      res.cookie('accessToken', result.accessToken, {
+        ...cookieOptions,
+        httpOnly: true,
+      })
+
+      // Cookie de status (acessível pelo JavaScript do frontend)
+      res.cookie('auth-status', 'authenticated', {
+        ...cookieOptions,
+        httpOnly: false,
+        domain:
+          process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined,
       })
 
       const response: AuthLoginResponse = {
@@ -71,10 +86,21 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res() res: Response): Promise<void> {
-    res.clearCookie('accessToken', {
+    // Configuração base para limpeza dos cookies
+    const clearOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
+    } as const
+
+    // Limpar ambos os cookies
+    res.clearCookie('accessToken', clearOptions)
+
+    res.clearCookie('auth-status', {
+      ...clearOptions,
+      httpOnly: false,
+      domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined,
     })
 
     res.status(HttpStatus.OK).json({
