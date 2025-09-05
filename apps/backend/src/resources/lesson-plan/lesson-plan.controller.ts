@@ -120,4 +120,9 @@ export class LessonPlanController {
       example,
     })
   }
+
+  @Get('/:id/pdf')
+  async getInformationToPdf(@Param('id') id: string) {
+    return await this.lessonPlanService.getInformationsToPdf(id)
+  }
 }

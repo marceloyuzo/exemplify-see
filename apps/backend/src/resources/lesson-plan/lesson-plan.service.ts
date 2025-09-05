@@ -256,6 +256,7 @@ export class LessonPlanService {
     const exampleLabelMap = {
       correct: 'Correto',
       erroneous: 'Errado',
+      both: 'Ambos',
     }
 
     const modalityLabelMap = {
@@ -424,6 +425,97 @@ export class LessonPlanService {
         perPage,
         totalPages: Math.ceil(total / perPage),
       },
+    }
+  }
+
+  async getInformationsToPdf(id: string) {
+    const informationLessonPlanToPdf = await this.prisma.lessonPlan.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        title: true,
+        approach: {
+          select: {
+            title: true,
+          },
+        },
+        description: true,
+        year: true,
+        workload: true,
+        subject: {
+          select: {
+            title: true,
+          },
+        },
+        topic: {
+          select: {
+            title: true,
+          },
+        },
+        complexity: true,
+        modality: true,
+        example: true,
+        priorKnowledge: true,
+        contents: true,
+        materials: true,
+        axes: {
+          select: {
+            axis: {
+              select: {
+                title: true,
+              },
+            },
+            answers: {
+              select: {
+                steps: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const complexityLabelMap = {
+      beginner: 'Iniciante',
+      intermediate: 'Intermediário',
+    }
+
+    const exampleLabelMap = {
+      correct: 'Correto',
+      erroneous: 'Errado',
+    }
+
+    const modalityLabelMap = {
+      inPerson: 'Presencial',
+      hybrid: 'Híbrido',
+      remote: 'Remoto',
+    }
+
+    const processedAxes =
+      informationLessonPlanToPdf?.axes.map((axis) => {
+        const lastAnswer = [...axis.answers]
+          .reverse()
+          .find((a) => a?.steps && a.steps.length > 0)
+
+        return {
+          axisTitle: axis.axis.title,
+          steps: lastAnswer ? lastAnswer.steps : [],
+        }
+      }) ?? []
+
+    return {
+      ...informationLessonPlanToPdf,
+      axes: processedAxes,
+      complexityLabel: informationLessonPlanToPdf?.complexity
+        ? complexityLabelMap[informationLessonPlanToPdf.complexity]
+        : null,
+      exampleLabel: informationLessonPlanToPdf?.example
+        ? exampleLabelMap[informationLessonPlanToPdf.example]
+        : null,
+      modalityLabel: informationLessonPlanToPdf?.modality
+        ? modalityLabelMap[informationLessonPlanToPdf.modality]
+        : null,
     }
   }
 }

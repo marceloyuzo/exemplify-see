@@ -25,7 +25,6 @@ import {
   updateLessonPlan,
 } from '@/api/lesson-plan/update-lesson-plan'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { generatePdf } from '@/api/lesson-plan/generate-pdf'
 
 const lessonPlanMetadataSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -115,9 +114,6 @@ interface LessonPlanContextType {
   // Lesson plan management
   saveLessonPlan: () => Promise<LessonPlanResponse | undefined>
   resetAllForms: () => void
-  generateLessonPlanPdf: () => Promise<void>
-
-  isGeneratingPdf: boolean
 
   // Global states
   isSaving: boolean
@@ -762,18 +758,6 @@ export function LessonPlanProvider({
       },
     })
 
-  // Mutation para gerar PDF
-  const { mutateAsync: generatePdfAsync, isPending: isGeneratingPdf } =
-    useMutation({
-      mutationFn: generatePdf,
-      onSuccess: () => {
-        toast.success('PDF gerado com sucesso!')
-      },
-      onError: (error) => {
-        toast.error(`Erro ao gerar PDF. Tente novamente. ${error}`)
-      },
-    })
-
   // Salvar plano de aula
   const saveLessonPlan = useCallback(async () => {
     // Validar formulário de metadados
@@ -867,89 +851,6 @@ export function LessonPlanProvider({
     lessonPlanId,
   ])
 
-  const generateLessonPlanPdf = useCallback(async () => {
-    // Validar formulário de metadados
-    const metadataValid = await metadataForm.trigger()
-    if (!metadataValid) {
-      toast.error('Por favor, preencha todos os campos obrigatórios')
-      return
-    }
-
-    const metadataValues = metadataForm.getValues()
-    const axes: LessonPlanAxis[] = []
-
-    for (const axisId of axisIds) {
-      const axisData = getAxisData(axisId)
-
-      if (axisData.isCompleted) {
-        const answers = []
-
-        for (const question of axisData.currentQuestions) {
-          const answerId = axisData.currentAnswers[question.id]
-          if (answerId) {
-            const steps = axisData.getStepsForAnswer(question.id, answerId)
-
-            answers.push({
-              questionId: question.id,
-              answerId,
-              steps: steps.map((step, index) => ({
-                title: step.title,
-                description: step.description,
-                order: step.order || index,
-              })),
-            })
-          }
-        }
-
-        if (answers.length > 0) {
-          axes.push({
-            axisId,
-            answers,
-          })
-        }
-      }
-    }
-
-    if (axes.length === 0) {
-      toast.error(
-        'Nenhum eixo foi preenchido. Complete pelo menos um eixo antes de gerar o PDF.',
-      )
-      return
-    }
-
-    const payload = {
-      title: metadataValues.title,
-      description: metadataValues.description || undefined,
-      subjectId: metadataValues.subjectId,
-      topicId: metadataValues.topicId,
-      complexity: metadataValues.complexity,
-      year: metadataValues.year,
-      workload: metadataValues.workload,
-      modality: metadataValues.modality,
-      contents: metadataValues.contents,
-      materials: metadataValues.materials,
-      priorKnowledge: metadataValues.priorKnowledge,
-      example: metadataValues.example,
-      isPublic: metadataValues.isPublic,
-      approachId,
-      axes,
-      ...(isEditing && { lessonPlanId }),
-    }
-    try {
-      await generatePdfAsync(payload)
-    } catch (error) {
-      // Erro já tratado no onError do mutation
-    }
-  }, [
-    metadataForm,
-    approachId,
-    axisIds,
-    getAxisData,
-    generatePdfAsync,
-    isEditing,
-    lessonPlanId,
-  ])
-
   // Resetar todos os formulários
   const resetAllForms = useCallback(() => {
     metadataForm.reset()
@@ -982,7 +883,6 @@ export function LessonPlanProvider({
     resetAxis,
     goToPreviousQuestion,
     saveLessonPlan,
-    generateLessonPlanPdf,
     resetAllForms,
     isSaving: isSaving || isLoadingExisting,
     isAnyFormCompleted,
@@ -993,7 +893,6 @@ export function LessonPlanProvider({
     originalAuthorId,
     currentUserId,
     isDataLoaded: isDataLoaded && !isLoadingExisting,
-    isGeneratingPdf,
   }
 
   return (

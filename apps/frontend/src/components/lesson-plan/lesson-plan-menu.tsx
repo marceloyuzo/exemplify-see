@@ -6,6 +6,9 @@ import LessonPlanSaveDialog from './lesson-plan-dialogs/lesson-plan-save-dialog'
 import { useLessonPlanContext } from '@/contexts/lesson-plan-context'
 import { Tooltip, TooltipTrigger } from '../ui/tooltip'
 import { TooltipContent } from '@radix-ui/react-tooltip'
+import { useMutation } from '@tanstack/react-query'
+import { getInformationPdf } from '@/api/lesson-plan/get-information-pdf'
+import generatePdf from '@/utils/generate-pdf'
 
 export default function LessonPlanMenu() {
   const router = useRouter()
@@ -17,13 +20,25 @@ export default function LessonPlanMenu() {
     isAnyFormCompleted,
     totalCompletedForms,
     totalForms,
-    generateLessonPlanPdf,
-    isGeneratingPdf,
   } = useLessonPlanContext()
 
+  const { mutateAsync: getInformationPdfAsync } = useMutation({
+    mutationFn: getInformationPdf,
+  })
+
   const handleGeneratePdf = async () => {
+    if (!lessonPlanId) {
+      return
+    }
+
     try {
-      await generateLessonPlanPdf()
+      const data = await getInformationPdfAsync({
+        lessonPlanId,
+      })
+
+      await generatePdf({
+        payload: data,
+      })
     } catch (error) {
       // Erro já tratado pela mutation no contexto
     }
@@ -60,9 +75,9 @@ export default function LessonPlanMenu() {
             <Button
               variant="outline"
               onClick={handleGeneratePdf}
-              disabled={isGeneratingPdf || !isAnyFormCompleted || !lessonPlanId}
+              disabled={!isAnyFormCompleted || !lessonPlanId}
             >
-              {isGeneratingPdf ? 'Gerando PDF...' : 'Exportar Plano PDF'}
+              {'Exportar Plano PDF'}
             </Button>
           </span>
         </TooltipTrigger>
