@@ -20,6 +20,7 @@ export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
     const response = context.switchToHttp().getResponse()
+    const isProd = process.env.NODE_ENV === 'production'
 
     const token = request.cookies?.accessToken
 
@@ -60,10 +61,10 @@ export class JwtAuthGuard implements CanActivate {
 
         response.cookie('accessToken', newToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production', // deve ser true em prod
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // permite cross-site
-          domain: '.exemplify-see.com', // necessário para cross-subdomain
-          path: '/', // igual ao cookie original
+          secure: isProd,
+          sameSite: isProd ? 'none' : 'lax',
+          domain: isProd ? '.exemplify-see.com' : undefined,
+          path: '/',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
         })
       }
@@ -76,10 +77,10 @@ export class JwtAuthGuard implements CanActivate {
 
       response.clearCookie('accessToken', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        domain: '.exemplify-see.com', // igual ao cookie original
-        path: '/', // igual ao cookie original
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        domain: isProd ? '.exemplify-see.com' : undefined,
+        path: '/',
       })
 
       throw new UnauthorizedException('Token inválido ou expirado')

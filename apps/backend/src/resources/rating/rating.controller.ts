@@ -40,10 +40,12 @@ export class RatingController {
   async findRatingsByExample(
     @Query('page') page: string = '1',
     @Query('perPage') perPage: string = '10',
-    @Query('exampleId') exampleId: string,
+    @Query('exampleId') exampleId?: string,
+    @Query('lessonPlanId') lessonPlanId?: string,
   ) {
     return await this.ratingService.findRatings({
       exampleId,
+      lessonPlanId,
       page: Number(page),
       perPage: Number(perPage),
     })

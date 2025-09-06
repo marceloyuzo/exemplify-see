@@ -12,7 +12,7 @@ import {
   VideoIcon,
   XIcon,
 } from 'lucide-react'
-import { forwardRef, useEffect, useRef } from 'react'
+import { forwardRef, useRef } from 'react'
 import { Control, Controller, FieldError } from 'react-hook-form'
 
 import {
@@ -117,13 +117,15 @@ const FileUploaderInputBase = forwardRef<
     const inputRef =
       (ref as React.RefObject<HTMLInputElement>) || internalInputRef
 
+    // Determinar se estamos em modo controlado (com value e onChange)
+    const isControlled = onChange !== undefined
+
     const [
       { files, isDragging, errors },
       {
         handleDragEnter,
         handleDragLeave,
         handleDragOver,
-        handleDrop,
         removeFile,
         clearFiles,
         addFiles,
@@ -134,33 +136,26 @@ const FileUploaderInputBase = forwardRef<
       maxSize,
       accept,
       initialFiles: [],
-      // Removemos onFilesChange para evitar setState durante render
     })
 
-    // Usar value do React Hook Form se fornecido, caso contrário usar o estado interno
-    const displayFiles = value.length > 0 ? value : files
-
-    // Sincronizar mudanças com onChange quando houver mudanças internas
-    useEffect(() => {
-      if (value.length === 0 && files.length > 0) {
-        onChange?.(files)
-      }
-    }, [files, onChange, value.length])
+    // Usar value do React Hook Form se fornecido (modo controlado),
+    // caso contrário usar o estado interno (modo não controlado)
+    const displayFiles = isControlled ? value : files
 
     const handleRemoveFile = (id: string) => {
-      if (value.length > 0) {
-        // Se estamos usando value controlado (React Hook Form)
+      if (isControlled) {
+        // Modo controlado (React Hook Form)
         const updatedFiles = value.filter((file) => file.id !== id)
-        onChange?.(updatedFiles)
+        onChange(updatedFiles)
       } else {
-        // Se estamos usando estado interno
+        // Modo não controlado (estado interno)
         removeFile(id)
       }
     }
 
     const handleClearFiles = () => {
-      if (value.length > 0) {
-        onChange?.([])
+      if (isControlled) {
+        onChange([])
       } else {
         clearFiles()
       }
@@ -172,11 +167,27 @@ const FileUploaderInputBase = forwardRef<
       }
     }
 
+    const createFileWithPreview = (file: File): FileWithPreview => ({
+      file,
+      id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      preview: file.type.startsWith('image/')
+        ? URL.createObjectURL(file)
+        : undefined,
+    })
+
     const handleFilesAdded = (newFiles: FileList | File[]) => {
-      addFiles(newFiles)
-      // Se temos onChange, notificar sobre as mudanças
-      if (onChange && value.length === 0) {
-        // O useEffect vai pegar a mudança
+      const filesArray = Array.from(newFiles)
+
+      if (isControlled) {
+        // Modo controlado - criar FileWithPreview e chamar onChange
+        const newFilesPreviews = filesArray.map(createFileWithPreview)
+        const updatedFiles = multiple
+          ? [...value, ...newFilesPreviews]
+          : newFilesPreviews
+        onChange(updatedFiles)
+      } else {
+        // Modo não controlado - usar o hook
+        addFiles(newFiles)
       }
     }
 
@@ -192,24 +203,14 @@ const FileUploaderInputBase = forwardRef<
         return
       }
 
-      const droppedFiles = e.dataTransfer.files
-      if (value.length > 0) {
-        // Modo controlado - criar FileWithPreview e chamar onChange
-        const newFilesPreviews = Array.from(droppedFiles).map((file) => ({
-          file,
-          id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          preview: file.type.startsWith('image/')
-            ? URL.createObjectURL(file)
-            : undefined,
-        }))
+      handleFilesAdded(e.dataTransfer.files)
+    }
 
-        const updatedFiles = multiple
-          ? [...value, ...newFilesPreviews]
-          : newFilesPreviews
-        onChange?.(updatedFiles)
-      } else {
-        // Modo não controlado - usar o hook
-        handleDrop(e)
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFilesAdded(e.target.files)
+        // Limpar o input
+        e.target.value = ''
       }
     }
 
@@ -235,34 +236,8 @@ const FileUploaderInputBase = forwardRef<
             ref={inputRef}
             accept={accept}
             multiple={multiple}
-            onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                if (value.length > 0) {
-                  // Modo controlado
-                  const newFilesPreviews = Array.from(e.target.files).map(
-                    (file) => ({
-                      file,
-                      id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-                      preview: file.type.startsWith('image/')
-                        ? URL.createObjectURL(file)
-                        : undefined,
-                    }),
-                  )
-
-                  const updatedFiles = multiple
-                    ? [...value, ...newFilesPreviews]
-                    : newFilesPreviews
-                  onChange?.(updatedFiles)
-                } else {
-                  // Modo não controlado
-                  handleFilesAdded(e.target.files)
-                }
-
-                // Limpar o input
-                e.target.value = ''
-              }
-            }}
-          />{' '}
+            onChange={handleInputChange}
+          />
           <div className="flex flex-col items-center justify-center text-center">
             <div
               className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border"

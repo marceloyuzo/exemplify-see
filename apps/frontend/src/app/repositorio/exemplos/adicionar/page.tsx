@@ -31,17 +31,13 @@ const addExampleSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório.'),
   description: z.string().min(1, 'Descrição é obrigatório.'),
   topicId: z.string().min(1, 'O tema é obrigatório.'),
-  modelsId: z
-    .array(z.string().min(1))
-    .min(1, 'Pelo menos um modelo é obrigatório.'),
+  modelsId: z.array(z.string().min(1)),
   exampleType: z.string().min(1, 'O tipo do exemplo é obrigatório.'),
-  references: z
-    .array(
-      z.object({
-        value: z.string().min(1, 'O valor da referência é obrigatório.'),
-      }),
-    )
-    .min(1, 'Pelo menos uma referência é obrigatória.'),
+  references: z.array(
+    z.object({
+      value: z.string().min(1, 'O valor da referência é obrigatório.'),
+    }),
+  ),
   files: z
     .array(z.any())
     .min(1, 'Pelo menos um arquivo é obrigatório.')

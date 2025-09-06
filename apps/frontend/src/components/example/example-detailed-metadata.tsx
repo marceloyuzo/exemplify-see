@@ -63,19 +63,21 @@ export default function ExampleDetailedMetadata({
         <div>
           Tema: <span className="font-bold text-primary">{topic}</span>
         </div>
-        <div>
-          Modelos:{' '}
-          {exampleModel.map((model) => (
-            <div className="flex gap-1" key={model.model.id}>
-              <Badge
-                className="bg-[linear-gradient(to_right,var(--primary),var(--secondary))] 
+        {exampleModel.length > 0 && (
+          <div>
+            Modelos:{' '}
+            {exampleModel.map((model) => (
+              <div className="flex gap-1" key={model.model.id}>
+                <Badge
+                  className="bg-[linear-gradient(to_right,var(--primary),var(--secondary))] 
              text-background font-bold px-1 py-1 text-xs mb-1"
-              >
-                {model.model.title}
-              </Badge>
-            </div>
-          ))}
-        </div>
+                >
+                  {model.model.title}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

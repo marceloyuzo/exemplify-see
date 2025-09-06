@@ -4,12 +4,14 @@ import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import LessonPlanRatingList from './lesson-plan-rating-list'
 import LessonPlanRatingDialog from './lesson-plan-rating-dialog'
+import { useUser } from '@/hooks/use-user'
 
 interface LessonPlanDetailedContentProps {
   description: string | null
   contents: string[]
   materials: string[]
   priorKnowledge?: string
+  authorId: string
 }
 
 export default function LessonPlanDetailedContent({
@@ -17,8 +19,11 @@ export default function LessonPlanDetailedContent({
   contents,
   materials,
   priorKnowledge,
+  authorId,
 }: LessonPlanDetailedContentProps) {
   const [open, setOpen] = useState<boolean>(false)
+  const { user } = useUser()
+  const isOwner = authorId === user?.id
 
   return (
     <>
@@ -77,9 +82,11 @@ export default function LessonPlanDetailedContent({
               <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
                 Avaliações dos professores
               </h4>
-              <Button variant="outline" onClick={() => setOpen(true)}>
-                Realizar Avaliação
-              </Button>
+              {!isOwner && (
+                <Button variant="outline" onClick={() => setOpen(true)}>
+                  Realizar Avaliação
+                </Button>
+              )}
 
               <LessonPlanRatingDialog open={open} setOpen={setOpen} />
             </div>

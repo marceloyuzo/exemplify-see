@@ -38,15 +38,16 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<void> {
     const token = authHeader?.split(' ')[1]
+    const isProd = process.env.NODE_ENV === 'production'
 
     try {
       const result = await this.authService.login({ firebaseToken: token })
 
       res.cookie('accessToken', result.accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // obrigatório para SameSite=None
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // permite cross-site
-        domain: '.exemplify-see.com', // ponto inicial para incluir subdomínios
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        domain: isProd ? '.exemplify-see.com' : undefined,
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
       })
@@ -73,11 +74,13 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res() res: Response): Promise<void> {
+    const isProd = process.env.NODE_ENV === 'production'
+
     res.clearCookie('accessToken', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: '.exemplify-see.com', // importante para remover cookie correto
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      domain: isProd ? '.exemplify-see.com' : undefined,
       path: '/',
     })
 

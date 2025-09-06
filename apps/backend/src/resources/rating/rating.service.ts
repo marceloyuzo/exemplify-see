@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { PrismaService } from 'src/database/services/prisma.service'
 
 interface RateExampleProps {
@@ -15,7 +16,8 @@ interface RateExampleProps {
 }
 
 interface FindRatingsProps {
-  exampleId: string
+  exampleId?: string
+  lessonPlanId?: string
   page: number
   perPage: number
 }
@@ -55,6 +57,10 @@ export class RatingService {
         throw new NotFoundException(
           'Não existe um exemplo com esse identificador.',
         )
+      }
+
+      if (isExampleExists.authorId === userId) {
+        throw new ConflictException('Não pode avaliar o seu próprio exemplo')
       }
 
       const isUserAlreadyRated = await this.prisma.rating.findUnique({
@@ -97,6 +103,12 @@ export class RatingService {
         )
       }
 
+      if (isLessonPlanExists.userId === userId) {
+        throw new ConflictException(
+          'Não pode avaliar o seu próprio plano de aula.',
+        )
+      }
+
       const isUserAlreadyRated = await this.prisma.rating.findUnique({
         where: {
           userId_lessonPlanId: {
@@ -125,11 +137,28 @@ export class RatingService {
     }
   }
 
-  async findRatings({ exampleId, page, perPage }: FindRatingsProps) {
+  async findRatings({
+    exampleId,
+    lessonPlanId,
+    page,
+    perPage,
+  }: FindRatingsProps) {
+    if (exampleId && lessonPlanId) {
+      throw new ConflictException('Query incorreta.')
+    }
+
+    const where: Prisma.RatingWhereInput = {}
+
+    if (exampleId) {
+      where.exampleId = exampleId
+    }
+
+    if (lessonPlanId) {
+      where.lessonPlanId = lessonPlanId
+    }
+
     const ratings = await this.prisma.rating.findMany({
-      where: {
-        exampleId,
-      },
+      where,
       skip: (page - 1) * perPage,
       take: perPage,
       orderBy: { createdAt: 'desc' },

@@ -39,9 +39,9 @@ interface CreateExampleProps {
   description: string
   authorId: string
   topicId: string
-  modelsId: string[]
+  modelsId?: string[]
   exampleType: Example
-  references: string[]
+  references?: string[]
   files: MulterFile[]
 }
 
@@ -294,7 +294,7 @@ export class ExampleService {
       throw new NotFoundException('Não existe um tema com essa identificação.')
     }
 
-    if (modelsId.length > 0) {
+    if (modelsId && modelsId.length > 0) {
       for (const modelId of modelsId) {
         const isModelExists = await this.prisma.model.findUnique({
           where: { id: modelId },

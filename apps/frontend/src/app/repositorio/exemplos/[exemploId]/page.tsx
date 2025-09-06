@@ -33,6 +33,8 @@ export default function ExampleDetailedPage() {
       getExampleDetailed({
         exampleId,
       }),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
   })
 
   if (!exampleData) {
@@ -122,6 +124,7 @@ export default function ExampleDetailedPage() {
           description={exampleData.description}
           references={exampleData.references}
           attachments={exampleData.attachment}
+          authorId={exampleData.author.id}
         />
         <ExampleDetailedMetadata
           user={exampleData.author}

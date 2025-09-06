@@ -12,9 +12,9 @@ import { useUser } from '@/hooks/use-user'
 import { useState } from 'react'
 import { getLessonPlanDetailed } from '@/api/lesson-plan/get-lesson-plan-detailed'
 import LessonPlanDetailedHeader from '@/components/lesson-plan/lesson-plan-detailed-header'
-import LessonPlanDetailedContent from '@/components/lesson-plan/lesson-plan-detailed-content'
 import LessonPlanDetailedMetadata from '@/components/lesson-plan/lesson-plan-detailed-metadata'
 import LessonPlanDeleteDialog from '@/components/lesson-plan/lesson-plan-dialogs/lesson-plan-delete-dialog'
+import LessonPlanDetailedContent from '@/components/lesson-plan/lesson-plan-detailed-content'
 
 export default function ExampleDetailedPage() {
   const router = useRouter()
@@ -35,7 +35,6 @@ export default function ExampleDetailedPage() {
       }),
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
-    refetchOnWindowFocus: false,
   })
 
   if (!lessonPlanData) {
@@ -125,6 +124,7 @@ export default function ExampleDetailedPage() {
           contents={lessonPlanData.contents}
           materials={lessonPlanData.materials}
           priorKnowledge={lessonPlanData.priorKnowledge}
+          authorId={lessonPlanData.userId}
         />
 
         <LessonPlanDetailedMetadata

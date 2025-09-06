@@ -5,19 +5,24 @@ import { useState } from 'react'
 import { Button } from '../ui/button'
 import { Attachment } from '@/api/example/get-example-detailed'
 import ExampleAttachmentCard from './example-attachment-card'
+import { useUser } from '@/hooks/use-user'
 
 interface ExampleDetailedContentProps {
   description: string
   references: string[]
   attachments: Attachment[]
+  authorId: string
 }
 
 export default function ExampleDetailedContent({
   description,
   references,
   attachments,
+  authorId,
 }: ExampleDetailedContentProps) {
   const [open, setOpen] = useState<boolean>(false)
+  const { user } = useUser()
+  const isOwner = authorId === user?.id
 
   return (
     <>
@@ -36,18 +41,20 @@ export default function ExampleDetailedContent({
               {description}
             </p>
           </div>
-          <div>
-            <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
-              Referências
-            </h4>
-            <div className="flex flex-col">
-              <ul className="ml-6 list-disc [&>li]:mt-2">
-                {references.map((reference, index) => (
-                  <li key={index}>{reference}</li>
-                ))}
-              </ul>
+          {references.length > 0 && (
+            <div>
+              <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
+                Referências
+              </h4>
+              <div className="flex flex-col">
+                <ul className="ml-6 list-disc [&>li]:mt-2">
+                  {references.map((reference, index) => (
+                    <li key={index}>{reference}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex flex-col gap-4">
             <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
               Arquivos relacionados ao exemplo
@@ -68,9 +75,11 @@ export default function ExampleDetailedContent({
               <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
                 Avaliações dos professores
               </h4>
-              <Button variant="outline" onClick={() => setOpen(true)}>
-                Realizar Avaliação
-              </Button>
+              {!isOwner && (
+                <Button variant="outline" onClick={() => setOpen(true)}>
+                  Realizar Avaliação
+                </Button>
+              )}
 
               <RatingDialog open={open} setOpen={setOpen} />
             </div>
