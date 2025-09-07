@@ -155,6 +155,7 @@ export default function FormExemplo({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['examples-admin'] })
+      queryClient.invalidateQueries({ queryKey: ['examples'] })
       queryClient.invalidateQueries({ queryKey: ['example', initialData?.id] })
     },
   })
