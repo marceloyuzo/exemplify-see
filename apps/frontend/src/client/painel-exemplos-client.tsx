@@ -248,7 +248,7 @@ export default function PainelExemplosClient() {
         <div className="flex gap-4">
           <Button
             variant={'outline'}
-            onClick={() => router.push('/painel-administrador')}
+            onClick={() => router.push('/')}
             className="cursor-pointer"
           >
             Voltar
@@ -350,7 +350,18 @@ export default function PainelExemplosClient() {
                         {example.title}
                       </TableCell>
                       <TableCell className="h-11">
-                        {example.type === 'correct' ? 'Correto' : 'Errôneo'}
+                        {(() => {
+                          switch (example.type) {
+                            case 'correct':
+                              return 'Correto'
+                            case 'erroneous':
+                              return 'Errôneo'
+                            case 'both':
+                              return 'Ambos'
+                            default:
+                              return '-'
+                          }
+                        })()}
                       </TableCell>
                       <TableCell className="h-11">
                         {example.topic.title}

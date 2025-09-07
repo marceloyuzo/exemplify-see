@@ -78,7 +78,18 @@ export default function LessonPlanDetailedMetadata({
         <div>
           Tipo do Plano de Aula:{' '}
           <span className="font-bold text-primary">
-            {exampleType === 'correct' ? 'Correto' : 'Errôneo'}
+            {(() => {
+              switch (exampleType) {
+                case 'correct':
+                  return 'Correto'
+                case 'erroneous':
+                  return 'Errôneo'
+                case 'both':
+                  return 'Ambos'
+                default:
+                  return '-'
+              }
+            })()}
           </span>
         </div>
         <div>

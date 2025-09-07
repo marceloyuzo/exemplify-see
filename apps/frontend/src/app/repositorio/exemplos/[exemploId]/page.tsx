@@ -109,7 +109,14 @@ export default function ExampleDetailedPage() {
             setOpen={setOpenDeleteDialog}
           />
 
-          <Button variant={'outline'}>Editar Exemplo</Button>
+          <Button
+            variant={'outline'}
+            onClick={() =>
+              router.push(`/repositorio/exemplos/${exampleId}/editar`)
+            }
+          >
+            Editar Exemplo
+          </Button>
         </div>
       )}
 

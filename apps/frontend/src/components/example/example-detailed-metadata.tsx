@@ -57,7 +57,18 @@ export default function ExampleDetailedMetadata({
         <div>
           Tipo de Exemplo:{' '}
           <span className="font-bold text-primary">
-            {exampleType === 'correct' ? 'Correto' : 'Errôneo'}
+            {(() => {
+              switch (exampleType) {
+                case 'correct':
+                  return 'Correto'
+                case 'erroneous':
+                  return 'Errôneo'
+                case 'both':
+                  return 'Ambos'
+                default:
+                  return '-'
+              }
+            })()}
           </span>
         </div>
         <div>
@@ -66,16 +77,19 @@ export default function ExampleDetailedMetadata({
         {exampleModel.length > 0 && (
           <div>
             Modelos:{' '}
-            {exampleModel.map((model) => (
-              <div className="flex gap-1" key={model.model.id}>
-                <Badge
-                  className="bg-[linear-gradient(to_right,var(--primary),var(--secondary))] 
-             text-background font-bold px-1 py-1 text-xs mb-1"
-                >
-                  {model.model.title}
-                </Badge>
-              </div>
-            ))}
+            <div className="flex flex-wrap gap-2 mt-1">
+              {exampleModel.map((model) => (
+                <div key={model.model.id} className="max-w-[260px] min-w-0">
+                  <Badge
+                    title={model.model.title}
+                    className="block w-full truncate bg-[linear-gradient(to_right,var(--primary),var(--secondary))] 
+     text-background text-left px-2 py-1 text-xs font-bold"
+                  >
+                    {model.model.title}
+                  </Badge>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </CardContent>

@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Request,
@@ -18,6 +19,7 @@ import { AdminGuard } from 'src/common/guards/admin.guard'
 import { CreateExampleDto } from './dto/create-example.dto'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { MulterFile } from '../attachment/attachment.service'
+import { UpdateExampleDto } from './dto/update-example.dto'
 
 @Controller('/example')
 export class ExampleController {
@@ -116,6 +118,31 @@ export class ExampleController {
       topicId: createExampleDto.topicId,
       authorId: user.id,
       files,
+    })
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FilesInterceptor('files', 10))
+  async updateExample(
+    @Param('id') id: string,
+    @Request() req: Request & { user: User },
+    @Body() updateExampleDto: UpdateExampleDto,
+    @UploadedFiles() files: MulterFile[],
+  ) {
+    const user = req.user
+
+    return await this.exampleService.updateExample({
+      userId: user.id,
+      id,
+      title: updateExampleDto.title,
+      description: updateExampleDto.description,
+      references: updateExampleDto.references,
+      exampleType: updateExampleDto.exampleType,
+      modelsId: updateExampleDto.modelsId,
+      topicId: updateExampleDto.topicId,
+      files,
+      removeAttachmentIds: updateExampleDto.removeAttachmentIds,
     })
   }
 }
