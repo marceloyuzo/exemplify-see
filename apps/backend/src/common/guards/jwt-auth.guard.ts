@@ -75,13 +75,13 @@ export class JwtAuthGuard implements CanActivate {
     } catch (error) {
       this.logger.error('Erro na validação do token:', error.message)
 
-      response.clearCookie('accessToken', {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: isProd ? 'none' : 'lax',
-        domain: isProd ? '.exemplify-see.com' : undefined,
-        path: '/',
-      })
+      // response.clearCookie('accessToken', {
+      //   httpOnly: true,
+      //   secure: isProd,
+      //   sameSite: isProd ? 'none' : 'lax',
+      //   domain: isProd ? '.exemplify-see.com' : undefined,
+      //   path: '/',
+      // })
 
       throw new UnauthorizedException('Token inválido ou expirado')
     }

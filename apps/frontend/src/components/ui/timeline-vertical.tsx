@@ -7,6 +7,7 @@ import {
   TimelineSeparator,
   TimelineTitle,
 } from '@/components/ui/timeline'
+import ReactMarkdown from 'react-markdown'
 
 interface Step {
   title: string
@@ -30,7 +31,20 @@ export default function VerticalTimeline({ steps }: VerticalTimelineProps) {
             </TimelineTitle>
             <TimelineIndicator />
           </TimelineHeader>
-          <TimelineContent>{step.description}</TimelineContent>
+          <TimelineContent className="break-words">
+            <ReactMarkdown
+              components={{
+                a: ({ ...props }) => (
+                  <a
+                    {...props}
+                    className="font-semibold text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  />
+                ),
+              }}
+            >
+              {step.description}
+            </ReactMarkdown>
+          </TimelineContent>
         </TimelineItem>
       ))}
     </Timeline>
