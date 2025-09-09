@@ -1,12 +1,19 @@
 export default function About() {
   return (
     <div className="grid grid-cols-2 gap-10 bg-card p-10 border rounded-xl">
-      <div className="col-span-1 flex justify-center items-center">
+      <div className="col-span-1 flex flex-col justify-center items-center pt-10">
         <img
-          src="/image-about.jpg"
-          alt="Teste"
-          style={{ width: '500px', borderRadius: '8px' }}
+          src="/image-about.png"
+          alt="Tipos de Exemplos"
+          style={{ width: '600px', borderRadius: '8px' }}
         />
+
+        <span className="mt-2 text-sm text-primary-foreground">
+          Figura 1 - Tipos de Exemplos
+        </span>
+        <span className="text-sm text-primary-foreground">
+          Adaptado de Huang (2017)
+        </span>
       </div>
       <div className="col-span-1">
         <h2
