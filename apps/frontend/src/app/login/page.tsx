@@ -15,12 +15,10 @@ import { useUser } from '@/hooks/use-user'
 import { auth, googleProvider } from '@/lib/firebase'
 import { useMutation } from '@tanstack/react-query'
 import { signInWithPopup } from 'firebase/auth'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 export default function Login() {
-  const router = useRouter()
   const [loading, setLoading] = useState<boolean>(false)
   const { refetch } = useUser()
 
@@ -45,7 +43,7 @@ export default function Login() {
         duration: 5000,
       })
       refetch()
-      router.push('/')
+      window.location.href = '/'
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
