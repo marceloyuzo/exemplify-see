@@ -87,7 +87,7 @@ export default function LessonPlanSaveDialog({
           {isOwner && isEditing ? 'Editar Plano' : 'Salvar Plano'}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[1000px]">
+      <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto scrollbar-thin">
         <form onSubmit={handleSubmit(handleSave)}>
           <DialogHeader>
             <DialogTitle>Salvar Plano de Aula</DialogTitle>
