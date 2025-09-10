@@ -100,7 +100,7 @@ export default function Home() {
         />
       </section>
       <section
-        className="min-h-[75vh] flex justify-around items-center"
+        className="min-h-[85vh] flex justify-around items-center"
         id="sobre"
       >
         <About />

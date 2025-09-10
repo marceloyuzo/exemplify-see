@@ -26,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
                 <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
                   <main className="flex-1 overflow-y-auto">
-                    <div className="w-full max-w-[1400px] mx-auto pl-20 pr-10  mt-10">
+                    <div className="w-full max-w-[1400px] mx-auto pl-20 pr-10 my-10">
                       {children}
                     </div>
                   </main>
