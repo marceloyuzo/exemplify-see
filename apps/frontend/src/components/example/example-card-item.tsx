@@ -50,19 +50,19 @@ export default function ExampleCardItem({
 
   return (
     <div
-      className="w-full max-w-xs min-h-72 [perspective:1000px]"
+      className="w-full max-w-xs min-h-80 [perspective:1000px]"
       onClick={() => router.push(`/repositorio/exemplos/${id}`)}
     >
-      <div className="relative w-full h-full transition-transform duration-1000 [transform-style:preserve-3d] group hover:[transform:rotateY(180deg)]">
-        <Card className="absolute inset-0 w-full h-full [backface-visibility:hidden] flex flex-col cursor-pointer">
-          <CardHeader>
+      <div className="relative w-full min-h-80 h-full transition-transform duration-1000 [transform-style:preserve-3d] group hover:[transform:rotateY(180deg)]">
+        <Card className="absolute inset-0 w-full h-full [backface-visibility:hidden] flex flex-col cursor-pointer overflow-hidden">
+          <CardHeader className="flex-shrink-0">
             <CardTitle className="line-clamp-3">{title}</CardTitle>
             <CardDescription className="flex justify-between">
               {dateFormatted}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col gap-1 text-sm">
-            <div>
+          <CardContent className="flex-1 flex flex-col gap-1 text-sm overflow-hidden min-h-0">
+            <div className="flex-shrink-0">
               Tipo de Exemplo:{' '}
               <span className="font-bold text-primary">
                 {(() => {
@@ -79,12 +79,12 @@ export default function ExampleCardItem({
                 })()}
               </span>
             </div>
-            <div>
+            <div className="flex-shrink-0">
               Tema: <span className="font-bold text-primary">{topic}</span>
             </div>
-            <div>
+            <div className="flex-1 overflow-hidden">
               {exampleModel.length > 0 && (
-                <div>
+                <div className="line-clamp-4 break-words">
                   <span className="font-medium">Modelos: </span>
                   {exampleModel.map((model, idx) => (
                     <span
@@ -99,7 +99,7 @@ export default function ExampleCardItem({
               )}
             </div>
           </CardContent>
-          <CardFooter className="justify-between gap-2 mt-auto">
+          <CardFooter className="justify-between gap-2 flex-shrink-0">
             <div className="flex items-center gap-2">
               <Avatar>
                 <AvatarImage src={user.photoURL} alt="Profile image" />
@@ -119,17 +119,17 @@ export default function ExampleCardItem({
           </CardFooter>
         </Card>
 
-        <Card className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col cursor-pointer">
-          <CardHeader>
+        <Card className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col cursor-pointer overflow-hidden">
+          <CardHeader className="flex-shrink-0">
             <CardTitle className="line-clamp-2">{title}</CardTitle>
             <CardDescription className="flex justify-between">
               {dateFormatted}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 overflow-hidden">
+          <CardContent className="flex-1 overflow-hidden min-h-0">
             <p className="text-sm line-clamp-6 break-words">{description}</p>
           </CardContent>
-          <CardFooter className="justify-between gap-2 mt-auto">
+          <CardFooter className="justify-between gap-2 flex-shrink-0">
             <div className="flex items-center gap-2">
               <Avatar>
                 <AvatarImage src={user.photoURL} alt="Profile image" />
