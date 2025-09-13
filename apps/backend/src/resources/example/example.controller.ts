@@ -34,12 +34,14 @@ export class ExampleController {
     @Query('exampleName') exampleName?: string,
     @Query('exampleType') exampleType?: 'correct' | 'erroneous',
     @Query('topicId') topicId?: string,
+    @Query('modelId') modelId?: string,
   ) {
     return await this.exampleService.findManyExamples({
       page: Number(page),
       perPage: Number(perPage),
       orderBy,
       topicId,
+      modelId,
       exampleName,
       exampleType,
       admin: false,

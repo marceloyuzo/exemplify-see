@@ -35,7 +35,7 @@ export interface GetExampleDetailedResponse {
   description: string
   references: string[]
   exampleModel: ExampleModel[]
-  type: 'correct' | 'erroneous'
+  type: 'correct' | 'erroneous' | 'both'
   createdAt: string
   updatedAt: string
   author: Author

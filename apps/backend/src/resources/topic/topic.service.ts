@@ -25,6 +25,9 @@ export class TopicService {
         id: true,
         title: true,
       },
+      orderBy: {
+        title: 'asc',
+      },
     })
   }
 

@@ -22,6 +22,7 @@ interface FindManyExamplesProps {
   orderBy: string
   exampleName?: string
   topicId?: string
+  modelId?: string
   exampleType?: 'correct' | 'erroneous'
   admin: boolean
 }
@@ -79,6 +80,7 @@ export class ExampleService {
     exampleName,
     exampleType,
     topicId,
+    modelId,
     admin,
   }: FindManyExamplesProps) {
     const where: Prisma.ExampleWhereInput = {}
@@ -94,6 +96,14 @@ export class ExampleService {
       where.topicId = { equals: topicId }
     }
 
+    if (modelId) {
+      where.exampleModel = {
+        some: {
+          modelId,
+        },
+      }
+    }
+
     if (!admin) {
       where.isApprove = true
     }
@@ -107,6 +117,16 @@ export class ExampleService {
         references: true,
         type: true,
         isApprove: !!admin,
+        exampleModel: {
+          select: {
+            model: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         updatedAt: true,
         author: {

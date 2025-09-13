@@ -61,7 +61,7 @@ export class RatingController {
 
     return await this.ratingService.deleteRating({
       ratingId: id,
-      userId: user.id,
+      user,
     })
   }
 }

@@ -55,7 +55,10 @@ export function SelectOverlapping({
       </label>
       <div className="relative">
         <Select value={value} onValueChange={onValueChange}>
-          <SelectTrigger id={id} className="bg-card cursor-pointer">
+          <SelectTrigger
+            id={id}
+            className={`bg-card cursor-pointer truncate ${clearable && value ? 'pr-8' : ''}`}
+          >
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent className="bg-card">
@@ -74,7 +77,7 @@ export function SelectOverlapping({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-8 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-sm transition-colors z-20"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-sm transition-colors z-20"
             aria-label="Limpar seleção"
           >
             <X size={14} />

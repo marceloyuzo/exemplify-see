@@ -38,7 +38,7 @@ export default function LessonPlanDetailedContent({
             <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
               Descrição
             </h4>
-            <p className="leading-7 [&:not(:first-child)]:mt-4">
+            <p className="leading-7 whitespace-pre-line [&:not(:first-child)]:mt-4">
               {description}
             </p>
           </div>

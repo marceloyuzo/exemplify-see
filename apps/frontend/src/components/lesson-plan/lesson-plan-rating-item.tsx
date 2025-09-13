@@ -64,7 +64,7 @@ export default function LessonPlanRatingItem({
               <CardDescription>{dateFormatted}</CardDescription>
             </div>
             <div className="text-lg font-bold flex flex-col items-end gap-2">
-              {user?.id === author.id && (
+              {(user?.id === author.id || user?.role === 'admin') && (
                 <div
                   className="cursor-pointer hover:text-red-500 transition-all duration-200"
                   onClick={() => setOpen(true)}

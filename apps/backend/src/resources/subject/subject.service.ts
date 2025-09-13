@@ -25,6 +25,9 @@ export class SubjectService {
         id: true,
         title: true,
       },
+      orderBy: {
+        title: 'asc',
+      },
     })
   }
 

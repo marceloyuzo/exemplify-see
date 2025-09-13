@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { Prisma, User } from '@prisma/client'
 import { PrismaService } from 'src/database/services/prisma.service'
 
 interface RateExampleProps {
@@ -23,7 +23,7 @@ interface FindRatingsProps {
 }
 
 interface DeleteRatingProps {
-  userId: string
+  user: User
   ratingId: string
 }
 
@@ -194,7 +194,7 @@ export class RatingService {
     }
   }
 
-  async deleteRating({ ratingId, userId }: DeleteRatingProps) {
+  async deleteRating({ ratingId, user }: DeleteRatingProps) {
     const isRatingExists = await this.prisma.rating.findUnique({
       where: {
         id: ratingId,
@@ -207,7 +207,7 @@ export class RatingService {
       )
     }
 
-    if (isRatingExists.userId !== userId) {
+    if (isRatingExists.userId !== user.id && user.role !== 'admin') {
       throw new UnauthorizedException(
         'Você não tem permissão para realizar essa operação.',
       )

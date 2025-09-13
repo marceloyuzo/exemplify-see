@@ -15,12 +15,14 @@ import { InputAnimated } from '@/components/ui/input-animated'
 import { useDebounce } from 'use-debounce'
 import { findExamples } from '@/api/example/find-examples'
 import ExampleCardItem from './example-card-item'
+import { getModelOptions } from '@/api/models/get-model-options'
 
 const handleFilterExampleSchema = z.object({
   title: z.string().optional(),
   subjectId: z.string().optional(),
   topicId: z.string().optional(),
   exampleType: z.string().optional(),
+  modelId: z.string().optional(),
 })
 
 export default function ExampleList() {
@@ -34,6 +36,7 @@ export default function ExampleList() {
   const subjectIdParam = searchParams.get('subjectId') || ''
   const topicIdParam = searchParams.get('topicId') || ''
   const exampleParam = searchParams.get('exampleType') || ''
+  const modelIdParam = searchParams.get('modelId') || ''
 
   const {
     control,
@@ -47,6 +50,7 @@ export default function ExampleList() {
       subjectId: subjectIdParam,
       topicId: topicIdParam,
       exampleType: exampleParam,
+      modelId: modelIdParam,
     },
   })
 
@@ -56,6 +60,7 @@ export default function ExampleList() {
   const subjectId = watch('subjectId')
   const topicId = watch('topicId')
   const exampleType = watch('exampleType')
+  const modelId = watch('modelId')
 
   const [debouncedExampleName] = useDebounce(exampleName, 500)
 
@@ -89,6 +94,7 @@ export default function ExampleList() {
       subjectId: subjectIdParam,
       topicId: topicIdParam,
       exampleType: exampleParam,
+      modelId: modelIdParam,
     }
 
     const currentFormValues = {
@@ -96,6 +102,7 @@ export default function ExampleList() {
       subjectId: subjectId || '',
       topicId: topicId || '',
       exampleType: exampleType || '',
+      modelId: modelId || '',
     }
 
     type FilterKey = keyof typeof urlValues
@@ -110,6 +117,7 @@ export default function ExampleList() {
       setValue('subjectId', urlValues.subjectId)
       setValue('topicId', urlValues.topicId)
       setValue('exampleType', urlValues.exampleType)
+      setValue('modelId', urlValues.modelId)
       setTimeout(() => {
         isUpdatingFromURL.current = false
       }, 100)
@@ -125,10 +133,18 @@ export default function ExampleList() {
       subjectId: subjectId || '',
       topicId: topicId || '',
       exampleType: exampleType || '',
+      modelId: modelId || '',
     }
 
     updateURL(currentFilters)
-  }, [debouncedExampleName, subjectId, topicId, exampleType, updateURL])
+  }, [
+    debouncedExampleName,
+    subjectId,
+    topicId,
+    exampleType,
+    modelId,
+    updateURL,
+  ])
 
   function handleSortToggle() {
     const neworderBy = orderBy === 'asc' ? 'desc' : 'asc'
@@ -150,6 +166,7 @@ export default function ExampleList() {
       subjectId,
       topicId,
       exampleType,
+      modelId,
     ],
     queryFn: () =>
       findExamples({
@@ -158,6 +175,7 @@ export default function ExampleList() {
         exampleName: debouncedExampleName,
         orderBy,
         topicId,
+        modelId,
         exampleType,
       }),
     staleTime: 5 * 60 * 1000, // 5 minutos
@@ -169,6 +187,15 @@ export default function ExampleList() {
   const { data: topicsData, isLoading: topicIsLoading } = useQuery({
     queryKey: ['topic-options'],
     queryFn: getTopicOptions,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+  })
+
+  const { data: modelsData, isLoading: modelIsLoading } = useQuery({
+    queryKey: ['model-options'],
+    queryFn: getModelOptions,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
   })
 
   if (examplesIsLoading || examplesIsFetching) {
@@ -301,12 +328,37 @@ export default function ExampleList() {
                   options={[
                     { label: 'Correto', value: 'correct' },
                     { label: 'Errôneo', value: 'erroneous' },
+                    { label: 'Ambos', value: 'both' },
                   ]}
                   value={field.value}
                   onValueChange={field.onChange}
                   error={errors.exampleType}
                   clearable={true}
                   onClear={() => setValue('exampleType', '')}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="modelId"
+              render={({ field }) => (
+                <SelectOverlapping
+                  className="w-full max-w-[220px]"
+                  label="Modelo UML"
+                  options={
+                    modelIsLoading
+                      ? []
+                      : (modelsData?.map((model) => ({
+                          label: model.title,
+                          value: model.id,
+                        })) ?? [])
+                  }
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  error={errors.modelId}
+                  clearable={true}
+                  onClear={() => setValue('modelId', '')}
                 />
               )}
             />
@@ -343,6 +395,9 @@ export default function ExampleList() {
               key={example.id}
               id={example.id}
               title={example.title}
+              exampleModel={example.exampleModel}
+              topic={example.topic.title}
+              type={example.type}
               description={example.description}
               createdAt={example.createdAt}
               user={example.author}

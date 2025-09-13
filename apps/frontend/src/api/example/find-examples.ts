@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios'
+import { ExampleModel } from './get-example-detailed'
 
 interface FindExamplesParams {
   page: number
@@ -7,6 +8,7 @@ interface FindExamplesParams {
   exampleName?: string
   topicId?: string
   exampleType?: string
+  modelId?: string
 }
 
 export interface ExampleResponse {
@@ -15,6 +17,7 @@ export interface ExampleResponse {
   description: string
   reference: string[]
   type: string
+  exampleModel: ExampleModel[]
   createdAt: string
   updatedAt: string
   author: {
@@ -46,6 +49,7 @@ export async function findExamples({
   orderBy,
   topicId,
   exampleType,
+  modelId,
 }: FindExamplesParams) {
   const response = await api.get<FindExamplesResponse>('/example', {
     params: {
@@ -55,6 +59,7 @@ export async function findExamples({
       orderBy,
       topicId,
       exampleType,
+      modelId,
     },
     withCredentials: true,
   })
