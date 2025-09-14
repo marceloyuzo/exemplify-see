@@ -276,7 +276,7 @@ export default function FormExemplo({
       <div className="flex gap-4 mb-10">
         <Button
           variant={'outline'}
-          onClick={() => router.push('/repositorio/exemplos')}
+          onClick={() => router.back()}
           className="cursor-pointer"
         >
           Voltar

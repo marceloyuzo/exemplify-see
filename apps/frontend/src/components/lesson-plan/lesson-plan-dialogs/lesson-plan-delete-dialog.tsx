@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { deleteLessonPlan } from '@/api/lesson-plan/delete-lesson-plan'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 interface ExampleDeleteDialogProps {
   lessonPlanId: string
@@ -28,6 +28,7 @@ export default function LessonPlanDeleteDialog({
   lessonPlanId,
 }: ExampleDeleteDialogProps) {
   const queryClient = useQueryClient()
+  const pathname = usePathname()
   const router = useRouter()
 
   const { mutateAsync: delLessonPlan } = useMutation({
@@ -41,6 +42,12 @@ export default function LessonPlanDeleteDialog({
       })
       queryClient.invalidateQueries({
         queryKey: ['lesson-plan', lessonPlanId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['lesson-plans-admin'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['lesson-plans-list'],
       })
     },
   })
@@ -56,7 +63,11 @@ export default function LessonPlanDeleteDialog({
 
       setOpen(false)
 
-      router.push('/repositorio/planos-de-aula')
+      if (pathname === '/painel-adminsitrador/planos-de-aula') {
+        router.push('/painel-adminsitrador/planos-de-aula')
+      } else {
+        router.push('/repositorio/planos-de-aula')
+      }
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const axiosErr = err as AxiosError<{ message: string }>

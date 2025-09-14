@@ -17,7 +17,7 @@ interface LessonPlanDetailedMetadataProps {
     name: string
     photoURL: string
   }
-  exampleType: string
+  exampleLabel: string
   topic?: string
   complexity?: string
   subject?: string
@@ -28,7 +28,7 @@ interface LessonPlanDetailedMetadataProps {
 
 export default function LessonPlanDetailedMetadata({
   user,
-  exampleType,
+  exampleLabel,
   topic,
   complexity,
   subject,
@@ -76,21 +76,8 @@ export default function LessonPlanDetailedMetadata({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div>
-          Tipo do Plano de Aula:{' '}
-          <span className="font-bold text-primary">
-            {(() => {
-              switch (exampleType) {
-                case 'correct':
-                  return 'Correto'
-                case 'erroneous':
-                  return 'Errôneo'
-                case 'both':
-                  return 'Ambos'
-                default:
-                  return '-'
-              }
-            })()}
-          </span>
+          Tipo de Exemplo:{' '}
+          <span className="font-bold text-primary">{exampleLabel}</span>
         </div>
         <div>
           Disciplina: <span className="font-bold text-primary">{subject}</span>
@@ -106,7 +93,7 @@ export default function LessonPlanDetailedMetadata({
           Ano/Semestre: <span className="font-bold text-primary">{year}</span>
         </div>
         <div>
-          Carga Horária:{' '}
+          Carga Horária (h):{' '}
           <span className="font-bold text-primary">{workload}</span>
         </div>
         <div>

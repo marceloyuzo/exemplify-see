@@ -273,7 +273,7 @@ export default function UsersTable() {
       <div className="flex gap-4">
         <Button
           variant={'outline'}
-          onClick={() => router.push('/painel-administrador/abordagens')}
+          onClick={() => router.back()}
           className="cursor-pointer"
         >
           Voltar

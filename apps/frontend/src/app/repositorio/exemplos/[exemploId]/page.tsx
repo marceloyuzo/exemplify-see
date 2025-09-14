@@ -86,7 +86,7 @@ export default function ExampleDetailedPage() {
         <div className="flex gap-4">
           <Button
             variant={'outline'}
-            onClick={() => router.push('/repositorio/exemplos')}
+            onClick={() => router.back()}
             className="cursor-pointer"
           >
             Voltar

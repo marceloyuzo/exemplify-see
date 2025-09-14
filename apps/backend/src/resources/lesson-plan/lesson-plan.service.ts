@@ -31,6 +31,13 @@ interface FindManyLessonPlanProps {
   example?: 'correct' | 'erroneous'
 }
 
+interface FindManyLessonPlanAdminProps {
+  page: number
+  perPage: number
+  orderBy: string
+  lessonPlanName?: string
+}
+
 @Injectable()
 export class LessonPlanService {
   constructor(private prisma: PrismaService) {}
@@ -167,7 +174,25 @@ export class LessonPlanService {
         id: true,
         title: true,
         description: true,
+        topic: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        subject: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        modality: true,
+        workload: true,
+        year: true,
+        example: true,
+        complexity: true,
         createdAt: true,
+        updatedAt: true,
         user: {
           select: {
             id: true,
@@ -178,13 +203,39 @@ export class LessonPlanService {
       },
     })
 
+    const complexityLabelMap = {
+      beginner: 'Iniciante',
+      intermediate: 'Intermediário',
+    }
+
+    const exampleLabelMap = {
+      correct: 'Correto',
+      erroneous: 'Errado',
+      both: 'Ambos',
+    }
+
+    const modalityLabelMap = {
+      inPerson: 'Presencial',
+      hybrid: 'Híbrido',
+      remote: 'Remoto',
+    }
+
     const lessonPlansWithRating = await Promise.all(
       lessonsPlans.map(async (plan) => {
         const rating = await this.prisma.rating.aggregate({
           where: { lessonPlanId: plan.id },
           _avg: { rate: true },
         })
-        return { ...plan, averageRating: rating._avg?.rate ?? null }
+
+        return {
+          ...plan,
+          complexity: plan.complexity
+            ? complexityLabelMap[plan.complexity]
+            : null,
+          example: plan.example ? exampleLabelMap[plan.example] : null,
+          modality: plan.modality ? modalityLabelMap[plan.modality] : null,
+          averageRating: rating._avg?.rate ?? null,
+        }
       }),
     )
 
@@ -343,6 +394,104 @@ export class LessonPlanService {
     return updatedLessonPlan
   }
 
+  async findManyLessonsPlanAdmin({
+    page,
+    perPage,
+    orderBy,
+    lessonPlanName,
+  }: FindManyLessonPlanAdminProps) {
+    const where: Prisma.LessonPlanWhereInput = {}
+    if (lessonPlanName) {
+      where.title = { contains: lessonPlanName, mode: 'insensitive' }
+    }
+
+    const lessonPlans = await this.prisma.lessonPlan.findMany({
+      where,
+      skip: (page - 1) * perPage,
+      take: perPage,
+      orderBy: { createdAt: orderBy === 'asc' ? 'asc' : 'desc' },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            photoURL: true,
+          },
+        },
+        topic: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        subject: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        modality: true,
+        workload: true,
+        year: true,
+        example: true,
+        complexity: true,
+      },
+    })
+
+    const complexityLabelMap = {
+      beginner: 'Iniciante',
+      intermediate: 'Intermediário',
+    }
+
+    const exampleLabelMap = {
+      correct: 'Correto',
+      erroneous: 'Errado',
+      both: 'Ambos',
+    }
+
+    const modalityLabelMap = {
+      inPerson: 'Presencial',
+      hybrid: 'Híbrido',
+      remote: 'Remoto',
+    }
+
+    const lessonPlansWithRating = await Promise.all(
+      lessonPlans.map(async (plan) => {
+        const rating = await this.prisma.rating.aggregate({
+          where: { lessonPlanId: plan.id },
+          _avg: { rate: true },
+        })
+
+        return {
+          ...plan,
+          complexity: plan.complexity
+            ? complexityLabelMap[plan.complexity]
+            : null,
+          example: plan.example ? exampleLabelMap[plan.example] : null,
+          modality: plan.modality ? modalityLabelMap[plan.modality] : null,
+          averageRating: rating._avg?.rate ?? null,
+        }
+      }),
+    )
+
+    const total = await this.prisma.lessonPlan.count({ where })
+
+    return {
+      data: lessonPlansWithRating,
+      meta: {
+        total,
+        page,
+        perPage,
+        totalPages: Math.ceil(total / perPage),
+      },
+    }
+  }
+
   async findManyLessonsPlan({
     userId,
     page,
@@ -395,6 +544,7 @@ export class LessonPlanService {
         title: true,
         description: true,
         createdAt: true,
+        updatedAt: true,
         user: {
           select: {
             id: true,
@@ -402,8 +552,42 @@ export class LessonPlanService {
             photoURL: true,
           },
         },
+        topic: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        subject: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        modality: true,
+        workload: true,
+        year: true,
+        example: true,
+        complexity: true,
       },
     })
+
+    const complexityLabelMap = {
+      beginner: 'Iniciante',
+      intermediate: 'Intermediário',
+    }
+
+    const exampleLabelMap = {
+      correct: 'Correto',
+      erroneous: 'Errado',
+      both: 'Ambos',
+    }
+
+    const modalityLabelMap = {
+      inPerson: 'Presencial',
+      hybrid: 'Híbrido',
+      remote: 'Remoto',
+    }
 
     const lessonPlansWithRating = await Promise.all(
       lessonPlans.map(async (plan) => {
@@ -411,7 +595,16 @@ export class LessonPlanService {
           where: { lessonPlanId: plan.id },
           _avg: { rate: true },
         })
-        return { ...plan, averageRating: rating._avg?.rate ?? null }
+
+        return {
+          ...plan,
+          complexity: plan.complexity
+            ? complexityLabelMap[plan.complexity]
+            : null,
+          example: plan.example ? exampleLabelMap[plan.example] : null,
+          modality: plan.modality ? modalityLabelMap[plan.modality] : null,
+          averageRating: rating._avg?.rate ?? null,
+        }
       }),
     )
 

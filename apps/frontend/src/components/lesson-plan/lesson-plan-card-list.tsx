@@ -85,6 +85,13 @@ export default function LessonPlanCardList({
                   createdAt={lessonPlan.createdAt}
                   user={lessonPlan.user}
                   averageRating={lessonPlan.averageRating}
+                  complexity={lessonPlan.complexity}
+                  example={lessonPlan.example}
+                  modality={lessonPlan.modality}
+                  subject={lessonPlan.subject.title}
+                  topic={lessonPlan.topic.title}
+                  workload={lessonPlan.workload}
+                  year={lessonPlan.year}
                 />
               </div>
             </CarouselItem>

@@ -418,6 +418,13 @@ export default function LessonPlanList({ myLessons }: LessonPlanListProps) {
             <LessonPlanCardItem
               key={lessonPlan.id}
               id={lessonPlan.id}
+              complexity={lessonPlan.complexity}
+              example={lessonPlan.example}
+              modality={lessonPlan.modality}
+              subject={lessonPlan.subject.title}
+              topic={lessonPlan.topic.title}
+              workload={lessonPlan.workload}
+              year={lessonPlan.year}
               title={lessonPlan.title}
               description={lessonPlan.description}
               createdAt={lessonPlan.createdAt}

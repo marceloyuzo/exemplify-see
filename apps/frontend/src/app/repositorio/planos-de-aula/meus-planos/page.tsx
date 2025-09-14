@@ -33,7 +33,7 @@ export default function MeusPlanosPage() {
         <div className="flex gap-4">
           <Button
             variant={'outline'}
-            onClick={() => router.push('/repositorio/planos-de-aula')}
+            onClick={() => router.back()}
             className="cursor-pointer"
           >
             Voltar

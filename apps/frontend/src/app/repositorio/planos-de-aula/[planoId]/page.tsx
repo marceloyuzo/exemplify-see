@@ -86,7 +86,7 @@ export default function ExampleDetailedPage() {
         <div className="flex gap-4">
           <Button
             variant={'outline'}
-            onClick={() => router.push('/repositorio/planos-de-aula')}
+            onClick={() => router.back()}
             className="cursor-pointer"
           >
             Voltar
@@ -130,7 +130,7 @@ export default function ExampleDetailedPage() {
         <LessonPlanDetailedMetadata
           user={lessonPlanData.user}
           topic={lessonPlanData.topic?.title}
-          exampleType={lessonPlanData.exampleLabel}
+          exampleLabel={lessonPlanData.exampleLabel}
           complexity={lessonPlanData.complexityLabel}
           subject={lessonPlanData.subject?.title}
           modality={lessonPlanData.modalityLabel}

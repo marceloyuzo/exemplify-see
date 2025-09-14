@@ -48,6 +48,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               { title: 'Disciplina', url: '/painel-administrador/disciplinas' },
               { title: 'Exemplos', url: '/painel-administrador/exemplos' },
               { title: 'Modelo', url: '/painel-administrador/modelos' },
+              {
+                title: 'Planos de Aula',
+                url: '/painel-administrador/planos-de-aula',
+              },
               { title: 'Tema', url: '/painel-administrador/temas' },
               { title: 'Usuários', url: '/painel-administrador/usuarios' },
             ],

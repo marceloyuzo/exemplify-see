@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   ArrowUpDownIcon,
   HomeIcon,
@@ -21,11 +21,6 @@ import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { DataTablePagination } from '@/components/table/pagination'
 import { Breadcrumbs } from '@/components/interface/breadcrumbs'
-import ExampleDeleteDialog from '@/components/example/example-delete-dialog'
-import {
-  ExampleResponseAdmin,
-  findExamplesAdmin,
-} from '@/api/example/find-examples-admin'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,30 +29,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { approveExample } from '@/api/example/approve-example'
-import axios, { AxiosError } from 'axios'
-import { toast } from 'sonner'
+import { findLessonPlansAdmin } from '@/api/lesson-plan/find-lesson-plans-admin'
+import { LessonPlanResponse } from '@/api/lesson-plan/update-lesson-plan'
+import LessonPlanDeleteDialog from '@/components/lesson-plan/lesson-plan-dialogs/lesson-plan-delete-dialog'
 
-export default function PainelExemplosClient() {
+export default function PainelPlanosDeAulaClient() {
   const router = useRouter()
-  const queryClient = useQueryClient()
   const searchParams = useSearchParams()
-  const [exampleToDelete, setExampleToDelete] =
-    useState<ExampleResponseAdmin | null>(null)
+  const [lessonPlanToDelete, setLessonPlanToDelete] = useState<string>('')
   const [open, setOpen] = useState(false)
   const page = Number(searchParams.get('page')) || 1
   const perPage = Number(searchParams.get('perPage')) || 25
   const orderBy = searchParams.get('orderBy') || 'asc'
-  const exampleName = searchParams.get('exampleName') || ''
-  const [searchExample, setSearchExample] = useState('')
+  const lessonPlanName = searchParams.get('lessonPlanName') || ''
+  const [searchLessonPlan, setSearchLessonPlan] = useState('')
 
   const { data, isLoading, error, isFetching } = useQuery({
-    queryKey: ['examples-admin', page, perPage, exampleName, orderBy],
+    queryKey: ['lesson-plans-admin', page, perPage, lessonPlanName, orderBy],
     queryFn: () =>
-      findExamplesAdmin({
+      findLessonPlansAdmin({
         page,
         perPage,
-        exampleName,
+        lessonPlanName,
         orderBy,
       }),
     staleTime: 5 * 60 * 1000, // 5 minutos
@@ -66,21 +59,9 @@ export default function PainelExemplosClient() {
     retry: 3,
   })
 
-  const { mutateAsync: approveExampleAsync } = useMutation({
-    mutationFn: approveExample,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['examples-admin'],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['examples'],
-      })
-    },
-  })
-
   useEffect(() => {
-    setSearchExample(exampleName)
-  }, [exampleName])
+    setSearchLessonPlan(lessonPlanName)
+  }, [lessonPlanName])
 
   const updateURL = useCallback(
     (params: Record<string, string | number>) => {
@@ -101,7 +82,7 @@ export default function PainelExemplosClient() {
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault()
-    updateURL({ exampleName: searchExample, page: 1 })
+    updateURL({ lessonPlanName: searchLessonPlan, page: 1 })
   }
 
   function handleSortToggle() {
@@ -109,40 +90,9 @@ export default function PainelExemplosClient() {
     updateURL({ orderBy: neworderBy })
   }
 
-  function openDeleteDialog(example: ExampleResponseAdmin) {
-    setExampleToDelete(example)
+  function openDeleteDialog(lessonPlan: LessonPlanResponse) {
+    setLessonPlanToDelete(lessonPlan.id)
     setOpen(true)
-  }
-
-  async function handleApproveExample({ id }: { id: string }) {
-    try {
-      await approveExampleAsync({
-        id,
-      })
-
-      toast.success('Exemplo aprovado com sucesso.', {
-        position: 'top-center',
-        duration: 3000,
-      })
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const axiosErr = err as AxiosError<{ message: string }>
-        const message =
-          axiosErr.response?.data.message ||
-          axiosErr.message ||
-          'Erro desconhecido'
-
-        toast.error(`Aconteceu um erro ao aprovar o exemplo. ${message}`, {
-          position: 'top-center',
-          duration: 3000,
-        })
-      } else {
-        toast.error(`Erro inesperado: ${(err as Error).message}`, {
-          position: 'top-center',
-          duration: 3000,
-        })
-      }
-    }
   }
 
   if (isLoading) {
@@ -150,7 +100,7 @@ export default function PainelExemplosClient() {
       <div className="space-y-4">
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando exemplos...</p>
+          <p className="text-muted-foreground">Carregando planos de aula...</p>
         </div>
       </div>
     )
@@ -177,7 +127,7 @@ export default function PainelExemplosClient() {
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-destructive mb-1">
-              Erro ao carregar exemplos
+              Erro ao carregar o plano de aula
             </p>
             <p className="text-sm text-muted-foreground mb-4">
               {error.message || 'Ocorreu um erro inesperado'}
@@ -219,7 +169,7 @@ export default function PainelExemplosClient() {
               Nenhum dado disponível
             </p>
             <p className="text-xs text-muted-foreground">
-              Não foi possível carregar os exemplos
+              Não foi possível carregar os planos de aula
             </p>
           </div>
         </div>
@@ -235,12 +185,12 @@ export default function PainelExemplosClient() {
     },
     { label: 'Painel Administrador', href: '/painel-administrador' },
     {
-      label: 'Exemplos',
+      label: 'Planos de Aula',
       isCurrent: true,
     },
   ]
 
-  const examples = data?.data
+  const lessonPlans = data?.data
 
   return (
     <>
@@ -275,22 +225,22 @@ export default function PainelExemplosClient() {
               <div className="relative">
                 <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nome da exemplo..."
-                  value={searchExample}
-                  onChange={(e) => setSearchExample(e.target.value)}
+                  placeholder="Buscar por nome do plano de aula..."
+                  value={searchLessonPlan}
+                  onChange={(e) => setSearchLessonPlan(e.target.value)}
                   className="pl-10 w-72"
                 />
               </div>
               <Button type="submit" variant="outline" size="sm">
                 Buscar
               </Button>
-              {exampleName && (
+              {lessonPlanName && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    setSearchExample('')
+                    setSearchLessonPlan('')
                     updateURL({ exampleName: '', page: 1 })
                   }}
                 >
@@ -317,18 +267,18 @@ export default function PainelExemplosClient() {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="h-11 ">Exemplo</TableHead>
-                  <TableHead className="h-11 ">Tipo</TableHead>
+                  <TableHead className="h-11 ">Plano de Aula</TableHead>
+                  <TableHead className="h-11 ">Tipo do Exemplo</TableHead>
+                  <TableHead className="h-11 ">Disciplina</TableHead>
                   <TableHead className="h-11 ">Tema</TableHead>
                   <TableHead className="h-11 ">Autor</TableHead>
                   <TableHead className="h-11 ">Criado em</TableHead>
                   <TableHead className="h-11 ">Atualizado em</TableHead>
-                  <TableHead className="h-11 ">Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {examples.length === 0 ? (
+                {lessonPlans.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={7}
@@ -338,49 +288,40 @@ export default function PainelExemplosClient() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  examples.map((example) => (
+                  lessonPlans.map((lessonPlan) => (
                     <TableRow
                       className="cursor-pointer transition-colors [&:hover]:bg-muted/80"
-                      key={example.id}
+                      key={lessonPlan.id}
                       onClick={() =>
-                        router.push(`/repositorio/exemplos/${example.id}`)
+                        router.push(
+                          `/repositorio/planos-de-aula/${lessonPlan.id}`,
+                        )
                       }
                     >
                       <TableCell className="font-medium h-11">
-                        {example.title}
+                        {lessonPlan.title}
                       </TableCell>
                       <TableCell className="h-11">
-                        {(() => {
-                          switch (example.type) {
-                            case 'correct':
-                              return 'Correto'
-                            case 'erroneous':
-                              return 'Errôneo'
-                            case 'both':
-                              return 'Ambos'
-                            default:
-                              return '-'
-                          }
-                        })()}
+                        {lessonPlan.example}
                       </TableCell>
                       <TableCell className="h-11">
-                        {example.topic.title}
+                        {lessonPlan.subject.title}
                       </TableCell>
                       <TableCell className="h-11">
-                        {example.author.name}
+                        {lessonPlan.topic.title}
                       </TableCell>
                       <TableCell className="h-11">
-                        {new Date(example.createdAt).toLocaleDateString(
+                        {lessonPlan.user.name}
+                      </TableCell>
+                      <TableCell className="h-11">
+                        {new Date(lessonPlan.createdAt).toLocaleDateString(
                           'pt-BR',
                         )}
                       </TableCell>
                       <TableCell className="h-11">
-                        {new Date(example.updatedAt).toLocaleDateString(
+                        {new Date(lessonPlan.updatedAt).toLocaleDateString(
                           'pt-BR',
                         )}
-                      </TableCell>
-                      <TableCell className="h-11">
-                        {example.isApprove ? 'Aprovado' : 'Pendente'}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -397,16 +338,7 @@ export default function PainelExemplosClient() {
                               className="cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleApproveExample({ id: example.id })
-                              }}
-                            >
-                              Aprovar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                openDeleteDialog(example)
+                                openDeleteDialog(lessonPlan)
                               }}
                             >
                               Deletar
@@ -428,11 +360,10 @@ export default function PainelExemplosClient() {
           />
         </Suspense>
 
-        <ExampleDeleteDialog
-          exampleToDelete={exampleToDelete}
+        <LessonPlanDeleteDialog
+          lessonPlanId={lessonPlanToDelete}
           open={open}
           setOpen={setOpen}
-          setExampleToDelete={setExampleToDelete}
         />
       </div>
     </>

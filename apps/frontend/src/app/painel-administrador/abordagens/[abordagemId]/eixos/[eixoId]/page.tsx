@@ -253,9 +253,7 @@ export default function EixoPage() {
       <div className="flex gap-4">
         <Button
           variant={'outline'}
-          onClick={() =>
-            router.push(`/painel-administrador/abordagens/${approachId}`)
-          }
+          onClick={() => router.back()}
           className="cursor-pointer"
         >
           Voltar

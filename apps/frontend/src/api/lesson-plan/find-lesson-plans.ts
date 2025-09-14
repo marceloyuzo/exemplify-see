@@ -18,11 +18,25 @@ export interface FindLessonPlansResponse {
     title: string
     description: string
     createdAt: string
+    updatedAt: string
     user: {
       id: string
       name: string
       photoURL: string
     }
+    topic: {
+      id: string
+      title: string
+    }
+    subject: {
+      id: string
+      title: string
+    }
+    example: string
+    modality: string
+    complexity: string
+    workload: string
+    year: string
     averageRating: number | null
   }[]
   meta: {

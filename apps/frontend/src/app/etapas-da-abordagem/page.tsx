@@ -233,7 +233,7 @@ export default function EtapasDaAbordagemPage() {
       <div className="flex gap-4">
         <Button
           variant={'outline'}
-          onClick={() => router.push('/')}
+          onClick={() => router.back()}
           className="cursor-pointer"
         >
           Voltar
