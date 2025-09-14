@@ -57,7 +57,7 @@ export default function LessonPlanCardList({
   }
 
   return (
-    <div className="mt-4 grid grid-cols-4 gap-4 relative">
+    <div className="grid grid-cols-4 gap-4 relative">
       {isFetching && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/60 rounded-xl z-10">
           <span className="text-sm text-muted-foreground">Atualizando...</span>

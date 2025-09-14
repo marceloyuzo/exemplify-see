@@ -292,7 +292,7 @@ export default function LessonPlanList({ myLessons }: LessonPlanListProps) {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="">
         <div className="flex items-center justify-between gap-2">
           <div className="relative">
             <InputAnimated
@@ -407,7 +407,7 @@ export default function LessonPlanList({ myLessons }: LessonPlanListProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 mb-4">
           {lessonPlansData.meta.total === 0 && (
             <p className="col-span-4 text-center text-lg my-20">
               Não encontramos nenhum resultado.

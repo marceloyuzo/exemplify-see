@@ -57,7 +57,7 @@ export default function LessonPlanCardItem({
 
   return (
     <div
-      className="w-full max-w-xs min-h-[340px] [perspective:1000px]"
+      className="w-full max-w-xs min-h-[340px] [perspective:1000px] mt-6"
       onClick={() => router.push(`/repositorio/planos-de-aula/${id}`)}
     >
       <div className="relative w-full min-h-[340px] h-full transition-transform duration-1000 [transform-style:preserve-3d] group hover:[transform:rotateY(180deg)]">
