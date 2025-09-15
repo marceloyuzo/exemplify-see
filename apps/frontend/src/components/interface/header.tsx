@@ -27,7 +27,7 @@ export default function Header() {
   const router = useRouter()
 
   return (
-    <div className="sticky top-0 left-0 w-full">
+    <div className="sticky top-0 left-0 w-full z-40">
       <header className="bg-muted border-b px-4 md:pr-6 md:pl-[10px]">
         <div className="flex h-16 items-center justify-between gap-4">
           <div className="flex flex-1 items-center gap-2">

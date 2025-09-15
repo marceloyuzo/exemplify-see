@@ -62,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar
-      className="top-16"
+      className="top-16 z-40"
       collapsible="icon"
       onMouseLeave={() => setOpen(false)}
       {...props}
