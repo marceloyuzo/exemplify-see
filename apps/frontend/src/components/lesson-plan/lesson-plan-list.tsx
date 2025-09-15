@@ -80,13 +80,6 @@ export default function LessonPlanList({ myLessons }: LessonPlanListProps) {
         }
       })
 
-      if (
-        !Object.prototype.hasOwnProperty.call(params, 'page') &&
-        Object.keys(params).length > 0
-      ) {
-        current.delete('page')
-      }
-
       router.push(`?${current.toString()}`, { scroll: false })
     },
     [searchParams, router],
@@ -136,6 +129,14 @@ export default function LessonPlanList({ myLessons }: LessonPlanListProps) {
     setValue,
   ])
 
+  const previousFilters = useRef({
+    lessonPlanName: lessonPlanNameParam,
+    subjectId: subjectIdParam,
+    topicId: topicIdParam,
+    example: exampleParam,
+    complexity: complexityParam,
+  })
+
   useEffect(() => {
     if (isUpdatingFromURL.current) return
 
@@ -147,7 +148,18 @@ export default function LessonPlanList({ myLessons }: LessonPlanListProps) {
       example: example || '',
     }
 
-    updateURL(currentFilters)
+    const filtersChanged = Object.keys(currentFilters).some(
+      (key) =>
+        currentFilters[key as keyof typeof currentFilters] !==
+        previousFilters.current[key as keyof typeof previousFilters.current],
+    )
+
+    if (filtersChanged) {
+      updateURL({ ...currentFilters, page: 1 })
+      previousFilters.current = currentFilters
+    } else {
+      updateURL(currentFilters)
+    }
   }, [
     debouncedLessonPlanName,
     subjectId,

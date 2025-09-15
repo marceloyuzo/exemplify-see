@@ -76,13 +76,6 @@ export default function ExampleList() {
         }
       })
 
-      if (
-        !Object.prototype.hasOwnProperty.call(params, 'page') &&
-        Object.keys(params).length > 0
-      ) {
-        current.delete('page')
-      }
-
       router.push(`?${current.toString()}`, { scroll: false })
     },
     [searchParams, router],
@@ -125,6 +118,14 @@ export default function ExampleList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exampleNameParam, subjectIdParam, topicIdParam, exampleParam, setValue])
 
+  const previousFilters = useRef({
+    exampleName: exampleNameParam,
+    subjectId: subjectIdParam,
+    topicId: topicIdParam,
+    exampleType: exampleParam,
+    modelId: modelIdParam,
+  })
+
   useEffect(() => {
     if (isUpdatingFromURL.current) return
 
@@ -136,7 +137,18 @@ export default function ExampleList() {
       modelId: modelId || '',
     }
 
-    updateURL(currentFilters)
+    const filtersChanged = Object.keys(currentFilters).some(
+      (key) =>
+        currentFilters[key as keyof typeof currentFilters] !==
+        previousFilters.current[key as keyof typeof previousFilters.current],
+    )
+
+    if (filtersChanged) {
+      updateURL({ ...currentFilters, page: 1 })
+      previousFilters.current = currentFilters
+    } else {
+      updateURL(currentFilters)
+    }
   }, [
     debouncedExampleName,
     subjectId,
