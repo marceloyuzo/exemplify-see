@@ -1,0 +1,49 @@
+name: CI - Validar Builds (Frontend + Backend)
+
+on:
+  pull_request:
+    branches:
+      - "main"
+  push:
+    branches-ignore:
+      - "main"
+
+jobs:
+  build-frontend:
+    name: Validar Build do Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js e Cache do Yarn
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "yarn"
+
+      - name: Instalar dependências
+        run: yarn install --frozen-lockfile
+
+      - name: Build Frontend
+        run: yarn workspace frontend-exemplify-see build
+
+  build-backend:
+    name: Validar Build do Backend (Docker)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (no-push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/backend/Dockerfile
+          push: false
+          tags: ci-build/meu-backend:${{ github.sha }}
