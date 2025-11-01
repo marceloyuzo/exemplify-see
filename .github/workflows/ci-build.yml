@@ -3,10 +3,10 @@ name: CI - Validar Builds (Frontend + Backend)
 on:
   pull_request:
     branches:
-      - "main"
+      - "master"
   push:
     branches-ignore:
-      - "main"
+      - "master"
 
 jobs:
   build-frontend:

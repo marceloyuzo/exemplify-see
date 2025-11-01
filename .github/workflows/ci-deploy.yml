@@ -3,7 +3,7 @@ name: CD - Deploy (Frontend Build + Backend Deploy)
 on:
   push:
     branches:
-      - "main"
+      - "master"
 
 jobs:
   build-frontend:
