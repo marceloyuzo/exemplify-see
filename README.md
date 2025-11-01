@@ -91,7 +91,7 @@ yarn dev
 # Backend apenas
 yarn dev --filter=backend
 
-# Frontend apenas  
+# Frontend apenas
 yarn dev --filter=frontend
 ```
 
@@ -187,12 +187,14 @@ Para que a autenticação funcione, você precisa:
 ## 📝 Scripts Disponíveis
 
 ### Root (Monorepo)
+
 - `yarn dev` - Executa backend e frontend em desenvolvimento
 - `yarn build` - Build de todas as aplicações
 - `yarn lint` - Lint de todas as aplicações
 - `yarn format` - Formatação com Prettier
 
 ### Banco de Dados (Prisma)
+
 - `yarn db:studio` - Abre o Prisma Studio para visualizar o banco
 - `yarn db:migrate` - Cria nova migration baseada nas mudanças do schema
 - `yarn db:migrate:deploy` - Aplica migrations existentes
@@ -204,11 +206,13 @@ Para que a autenticação funcione, você precisa:
 - `yarn db:pull` - Pull do schema do banco
 
 ### Backend
+
 - `yarn dev` - Executa em modo watch
 - `yarn start` - Executa em produção
 - `yarn test` - Executa testes
 
 ### Frontend
+
 - `yarn dev` - Executa com Turbopack
 - `yarn build` - Build para produção
 - `yarn start` - Servidor de produção
@@ -216,6 +220,7 @@ Para que a autenticação funcione, você precisa:
 ## 🐛 Solução de Problemas
 
 ### Banco não conecta
+
 ```bash
 # Verifique se o container está rodando
 docker ps
@@ -225,6 +230,7 @@ docker-compose restart postgres
 ```
 
 ### Erro de migrations
+
 ```bash
 cd apps/backend
 npx prisma migrate reset
@@ -232,8 +238,9 @@ npx prisma db seed
 ```
 
 ### Portas ocupadas
+
 - Backend: 3001
-- Frontend: 3000  
+- Frontend: 3000
 - PostgreSQL: 5432
 
 ## 📚 Documentação Adicional
