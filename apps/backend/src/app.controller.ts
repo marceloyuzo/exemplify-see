@@ -6,6 +6,10 @@ export class AppController {
 
   @Get()
   getHello(): string {
-    return 'Hello World'
+    const now = new Date()
+    const formatted = now.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+    })
+    return `${formatted}`
   }
 }
