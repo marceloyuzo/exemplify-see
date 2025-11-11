@@ -5,8 +5,17 @@ import {
 } from '@nestjs/common'
 import { CreateLessonPlanDto } from './dto/create-lesson-plan.dto'
 import { PrismaService } from 'src/database/services/prisma.service'
-import { Prisma, User } from '@prisma/client'
+import { LessonPlanAnswer, Prisma, User } from '@prisma/client'
 import { UpdateLessonPlanDto } from './dto/update-lesson-plan.dto'
+
+interface Axis {
+  lessonPlanId: string
+  id: string
+  createdAt: Date
+  updatedAt: Date | null
+  axisId: string
+  lastQuestionId: string | null
+}
 
 interface GetHighlightsLessonPlansProps {
   userId: string
@@ -64,9 +73,35 @@ export class LessonPlanService {
       priorKnowledge,
     } = createLessonPlanDto
 
-    return await this.prisma.$transaction(async (prisma) => {
-      // Criar o plano de aula principal
-      const lessonPlan = await prisma.lessonPlan.create({
+    const axisLastQuestions = await Promise.all(
+      axes.map(async (axisData) => {
+        let lastQuestionId: string | null = null
+
+        for (const answerData of axisData.answers) {
+          const lastTransition = await this.prisma.transition.findFirst({
+            where: {
+              answerId: answerData.answerId,
+              fromQuestionId: answerData.questionId,
+              toQuestionId: null,
+            },
+            select: { fromQuestionId: true },
+          })
+
+          if (lastTransition) {
+            lastQuestionId = lastTransition.fromQuestionId
+          }
+        }
+
+        return {
+          axisId: axisData.axisId,
+          lastQuestionId,
+          answers: axisData.answers,
+        }
+      }),
+    )
+
+    return await this.prisma.$transaction(async (tx) => {
+      const lessonPlan = await tx.lessonPlan.create({
         data: {
           modality,
           workload,
@@ -86,18 +121,17 @@ export class LessonPlanService {
         },
       })
 
-      // Criar os eixos do plano
-      for (const axisData of axes) {
-        const lessonPlanAxis = await prisma.lessonPlanAxis.create({
+      for (const axisData of axisLastQuestions) {
+        const lessonPlanAxis = await tx.lessonPlanAxis.create({
           data: {
             lessonPlanId: lessonPlan.id,
             axisId: axisData.axisId,
+            lastQuestionId: axisData.lastQuestionId,
           },
         })
 
-        // Criar as respostas para cada eixo
         for (const answerData of axisData.answers) {
-          const lessonPlanAnswer = await prisma.lessonPlanAnswer.create({
+          const lessonPlanAnswer = await tx.lessonPlanAnswer.create({
             data: {
               lessonPlanAxisId: lessonPlanAxis.id,
               questionId: answerData.questionId,
@@ -105,15 +139,14 @@ export class LessonPlanService {
             },
           })
 
-          // Criar os steps para cada resposta
-          for (const stepData of answerData.steps) {
-            await prisma.lessonPlanStep.create({
-              data: {
+          if (answerData.steps && answerData.steps.length > 0) {
+            await tx.lessonPlanStep.createMany({
+              data: answerData.steps.map((step) => ({
                 lessonPlanAnswerId: lessonPlanAnswer.id,
-                title: stepData.title,
-                description: stepData.description,
-                order: stepData.order,
-              },
+                title: step.title,
+                description: step.description,
+                order: step.order,
+              })),
             })
           }
         }
@@ -242,48 +275,17 @@ export class LessonPlanService {
     return lessonPlansWithRating
   }
 
-  async getLessonPlanById(id: string, userId: string) {
+  async getLessonPlanById(id: string, userId: string): Promise<any> {
     const lessonPlan = await this.prisma.lessonPlan.findUnique({
       where: { id },
       include: {
-        axes: {
-          include: {
-            answers: {
-              include: {
-                steps: {
-                  orderBy: {
-                    order: 'asc',
-                  },
-                },
-              },
-            },
-          },
-        },
         user: {
-          select: {
-            id: true,
-            name: true,
-            photoURL: true,
-          },
+          select: { id: true, name: true, photoURL: true },
         },
-        approach: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        subject: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        topic: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
+        approach: { select: { id: true, title: true } },
+        subject: { select: { id: true, title: true } },
+        topic: { select: { id: true, title: true } },
+        axes: true,
       },
     })
 
@@ -316,13 +318,20 @@ export class LessonPlanService {
       remote: 'Remoto',
     }
 
-    const lessonPlanWithAverageRating = await this.prisma.rating.aggregate({
+    const averageRating = await this.prisma.rating.aggregate({
       where: { lessonPlanId: id },
       _avg: { rate: true },
     })
 
+    const axes: Axis[] = []
+    for (const axis of lessonPlan.axes) {
+      const fullAxis = await this.buildAxisBacktrack(axis)
+      axes.push(fullAxis)
+    }
+
     return {
       ...lessonPlan,
+      axes,
       complexityLabel: lessonPlan.complexity
         ? complexityLabelMap[lessonPlan.complexity]
         : null,
@@ -332,16 +341,80 @@ export class LessonPlanService {
       modalityLabel: lessonPlan.modality
         ? modalityLabelMap[lessonPlan.modality]
         : null,
-      averageRating: lessonPlanWithAverageRating._avg?.rate ?? null,
+      averageRating: averageRating._avg?.rate ?? null,
+    }
+  }
+
+  private async buildAxisBacktrack(axis: Axis) {
+    const { id: lessonPlanAxisId, lastQuestionId } = axis
+
+    if (!lastQuestionId) {
+      return { ...axis, answers: [] }
+    }
+
+    const answers: LessonPlanAnswer[] = []
+    let currentQuestionId: string | null = lastQuestionId
+
+    while (currentQuestionId) {
+      const lessonPlanAnswer = await this.prisma.lessonPlanAnswer.findFirst({
+        where: {
+          lessonPlanAxisId,
+          questionId: currentQuestionId,
+        },
+        include: {
+          steps: { orderBy: { order: 'asc' } },
+        },
+      })
+
+      if (lessonPlanAnswer) {
+        answers.unshift(lessonPlanAnswer)
+      }
+
+      const transition = await this.prisma.transition.findFirst({
+        where: { toQuestionId: currentQuestionId },
+        select: { fromQuestionId: true },
+      })
+
+      currentQuestionId = transition?.fromQuestionId ?? null
+    }
+
+    return {
+      ...axis,
+      answers,
     }
   }
 
   async updateLessonPlan(id: string, payload: UpdateLessonPlanDto) {
     const { axes, ...lessonPlanData } = payload
 
-    // Usar transaction para garantir consistência
+    const axisLastQuestions = await Promise.all(
+      axes.map(async (axisData) => {
+        let lastQuestionId: string | null = null
+
+        for (const answerData of axisData.answers) {
+          const lastTransition = await this.prisma.transition.findFirst({
+            where: {
+              answerId: answerData.answerId,
+              fromQuestionId: answerData.questionId,
+              toQuestionId: null,
+            },
+            select: { fromQuestionId: true },
+          })
+
+          if (lastTransition) {
+            lastQuestionId = lastTransition.fromQuestionId
+          }
+        }
+
+        return {
+          axisId: axisData.axisId,
+          lastQuestionId,
+          answers: axisData.answers,
+        }
+      }),
+    )
+
     const updatedLessonPlan = await this.prisma.$transaction(async (tx) => {
-      // 1. Atualizar dados do plano de aula
       const lessonPlan = await tx.lessonPlan.update({
         where: { id },
         data: {
@@ -350,35 +423,32 @@ export class LessonPlanService {
         },
       })
 
-      // 2. Remover todos os eixos existentes (cascade vai remover answers e steps)
       await tx.lessonPlanAxis.deleteMany({
         where: { lessonPlanId: id },
       })
 
-      // 3. Recriar eixos com novos dados
-      for (const axisData of axes) {
-        const createdAxis = await tx.lessonPlanAxis.create({
+      for (const axisData of axisLastQuestions) {
+        const lessonPlanAxis = await tx.lessonPlanAxis.create({
           data: {
             lessonPlanId: id,
             axisId: axisData.axisId,
+            lastQuestionId: axisData.lastQuestionId,
           },
         })
 
-        // Criar answers para este eixo
         for (const answerData of axisData.answers) {
-          const createdAnswer = await tx.lessonPlanAnswer.create({
+          const lessonPlanAnswer = await tx.lessonPlanAnswer.create({
             data: {
-              lessonPlanAxisId: createdAxis.id,
+              lessonPlanAxisId: lessonPlanAxis.id,
               questionId: answerData.questionId,
               answerId: answerData.answerId,
             },
           })
 
-          // Criar steps para esta resposta
           if (answerData.steps && answerData.steps.length > 0) {
             await tx.lessonPlanStep.createMany({
               data: answerData.steps.map((step) => ({
-                lessonPlanAnswerId: createdAnswer.id,
+                lessonPlanAnswerId: lessonPlanAnswer.id,
                 title: step.title,
                 description: step.description,
                 order: step.order,

@@ -388,7 +388,7 @@ export function LessonPlanProvider({
       let currentSteps: Step[] = []
 
       if (axisData && axisData.answers && axisData.answers.length > 0) {
-        const answersInOrder = [...axisData.answers].reverse()
+        const answersInOrder = [...axisData.answers]
 
         let currentQuestion = rootQuestion
         questionsHistory.push(currentQuestion.id)

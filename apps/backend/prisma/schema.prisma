@@ -80,6 +80,7 @@ model Question {
   transitionsFromHere Transition[]       @relation("FromQuestion")
   transitionToHere    Transition?        @relation("ToQuestion")
   lessonPlanAnswers   LessonPlanAnswer[]
+  lessonPlanAxis      LessonPlanAxis[]
 
   @@map("questions")
 }
@@ -173,15 +174,17 @@ model LessonPlan {
 }
 
 model LessonPlanAxis {
-  id           String             @id @default(uuid())
-  lessonPlanId String             @map("lesson_plan_id")
-  axisId       String             @map("axis_id")
-  answers      LessonPlanAnswer[]
-  createdAt    DateTime           @default(now()) @map("created_at")
-  updatedAt    DateTime?          @updatedAt @map("updated_at")
+  id             String    @id @default(uuid())
+  lessonPlanId   String    @map("lesson_plan_id")
+  axisId         String    @map("axis_id")
+  lastQuestionId String?   @map("last_question_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
 
-  lessonPlan LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: Cascade)
-  axis       Axis       @relation(fields: [axisId], references: [id], onDelete: Cascade)
+  lessonPlan   LessonPlan         @relation(fields: [lessonPlanId], references: [id], onDelete: Cascade)
+  axis         Axis               @relation(fields: [axisId], references: [id], onDelete: Cascade)
+  lastQuestion Question?          @relation(fields: [lastQuestionId], references: [id])
+  answers      LessonPlanAnswer[]
 
   @@unique([lessonPlanId, axisId])
   @@map("lesson_plan_axes")
