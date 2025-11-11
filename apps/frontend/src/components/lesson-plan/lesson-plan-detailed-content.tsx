@@ -65,7 +65,7 @@ export default function LessonPlanDetailedContent({
             <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
               Conteúdos
             </h4>
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2 flex-wrap">
               {contents.map((content, index) => (
                 <Badge
                   key={index}

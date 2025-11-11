@@ -5,13 +5,14 @@ import { Breadcrumbs } from '@/components/interface/breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useQuery } from '@tanstack/react-query'
-import { HomeIcon } from 'lucide-react'
+import { AlertCircle, HomeIcon, Loader2, SearchX } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { LessonPlanProvider } from '@/contexts/lesson-plan-context'
 import LessonPlanMenu from '@/components/lesson-plan/lesson-plan-menu'
 import LessonPlanContent from '@/components/lesson-plan/lesson-plan-content'
 import { useUser } from '@/hooks/use-user'
 import OnBoarding from '@/components/lesson-plan/onboarding'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const APPROACH_ID = 'ce2fd7bd-a7bb-4438-86c3-98f4dcb0e105'
 
@@ -45,15 +46,63 @@ export default function LessonPlanClient() {
   ]
 
   if (isLoading) {
-    return <p>Carregando eixos...</p>
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="w-[320px] text-center shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-center gap-2 text-lg">
+              <Loader2 className="animate-spin" />
+              Carregando eixos...
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-sm">
+              Aguarde um momento enquanto buscamos os dados.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (isError) {
-    return <p>Ocorreu um erro ao carregar os eixos.</p>
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="w-[320px] text-center border-red-300 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-center gap-2 text-lg text-red-500">
+              <AlertCircle />
+              Erro ao carregar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-sm">
+              Ocorreu um erro ao carregar os eixos. Tente novamente mais tarde.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (!axisList || axisList.length === 0) {
-    return <p>Nenhum eixo encontrado.</p>
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="w-[320px] text-center shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-center gap-2 text-lg">
+              <SearchX />
+              Nenhum eixo encontrado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-sm">
+              Não há eixos cadastrados no momento.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
