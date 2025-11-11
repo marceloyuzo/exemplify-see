@@ -7,6 +7,7 @@ import {
   useState,
   useCallback,
   useEffect,
+  useRef,
 } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -123,8 +124,9 @@ interface LessonPlanContextType {
   isDataLoaded: boolean
   isEditing: boolean
   isOwner: boolean
+  isReconstructing: boolean
   originalAuthorId: string | null
-  currentUserId?: string // Você precisa passar isso como prop
+  currentUserId?: string
 }
 
 const LessonPlanContext = createContext<LessonPlanContextType | null>(null)
@@ -146,6 +148,8 @@ export function LessonPlanProvider({
 }: LessonPlanProviderProps) {
   const queryClient = useQueryClient()
   const isEditing = !!lessonPlanId
+  const [isReconstructing, setIsReconstructing] = useState(false)
+  const hasReconstructedRef = useRef(false)
 
   // Form para respostas das perguntas
   const questionsForm = useForm<FormData>({
@@ -217,7 +221,6 @@ export function LessonPlanProvider({
     setAxisStates(initialStates)
   }, [axisIds])
 
-  // Queries para perguntas root de cada eixo
   const rootQueries = useQuery({
     queryKey: ['question-roots', axisIds],
     queryFn: async () => {
@@ -261,7 +264,6 @@ export function LessonPlanProvider({
   useEffect(() => {
     setAxisStates((prevStates) => {
       const newStates = { ...prevStates }
-
       axisIds.forEach((axisId) => {
         if (newStates[axisId]) {
           newStates[axisId] = {
@@ -270,11 +272,15 @@ export function LessonPlanProvider({
           }
         }
       })
-
       return newStates
     })
 
-    if (rootQueries.data && !rootQueries.isLoading && !rootQueries.isFetching) {
+    if (
+      rootQueries.data &&
+      !rootQueries.isLoading &&
+      !rootQueries.isFetching &&
+      !(isEditing && hasReconstructedRef.current)
+    ) {
       setAxisStates((prevStates) => {
         const newStates = { ...prevStates }
 
@@ -309,13 +315,28 @@ export function LessonPlanProvider({
         return newStates
       })
     }
-  }, [rootQueries.data, rootQueries.isLoading, rootQueries.isFetching, axisIds])
+  }, [
+    rootQueries.data,
+    rootQueries.isLoading,
+    rootQueries.isFetching,
+    axisIds,
+    isEditing,
+    isReconstructing,
+  ])
+
+  useEffect(() => {
+    if (lessonPlanId) {
+      setIsDataLoaded(false)
+      setOriginalAuthorId(null)
+      setIsReconstructing(false)
+      hasReconstructedRef.current = false
+    }
+  }, [lessonPlanId])
 
   useEffect(() => {
     if (existingLessonPlan && !isDataLoaded) {
       setOriginalAuthorId(existingLessonPlan.userId)
 
-      // Carregar metadados
       metadataForm.reset({
         title: existingLessonPlan.title,
         description: existingLessonPlan.description || '',
@@ -332,7 +353,6 @@ export function LessonPlanProvider({
         year: existingLessonPlan.year,
       })
 
-      // Carregar respostas das perguntas
       const questionsData: FormData = {}
       existingLessonPlan.axes.forEach((axis) => {
         axis.answers.forEach((answer) => {
@@ -340,7 +360,6 @@ export function LessonPlanProvider({
         })
       })
 
-      // Definir valores das respostas
       Object.entries(questionsData).forEach(([questionId, answerId]) => {
         setValue(questionId, answerId)
       })
@@ -369,25 +388,23 @@ export function LessonPlanProvider({
       let currentSteps: Step[] = []
 
       if (axisData && axisData.answers && axisData.answers.length > 0) {
-        // Reconstruir a cadeia de perguntas
+        const answersInOrder = [...axisData.answers].reverse()
+
         let currentQuestion = rootQuestion
         questionsHistory.push(currentQuestion.id)
 
-        for (let i = 0; i < axisData.answers.length; i++) {
-          const answer = axisData.answers[i]
+        for (let i = 0; i < answersInOrder.length; i++) {
+          const answer = answersInOrder[i]
 
-          // Verificar se a resposta corresponde à pergunta atual
           if (answer.questionId === currentQuestion.id) {
-            // Se não é a última resposta, buscar próxima pergunta
-            if (i < axisData.answers.length - 1) {
+            if (i < answersInOrder.length - 1) {
               try {
                 const nextQuestion = await getQuestionNext({
                   answerId: answer.answerId,
                 })
 
                 if (nextQuestion) {
-                  // Verificar se a próxima pergunta corresponde à próxima resposta
-                  const nextAnswer = axisData.answers[i + 1]
+                  const nextAnswer = answersInOrder[i + 1]
                   if (nextQuestion.id === nextAnswer.questionId) {
                     currentQuestions.push(nextQuestion)
                     questionsHistory.push(nextQuestion.id)
@@ -402,7 +419,6 @@ export function LessonPlanProvider({
                 break
               }
             } else {
-              // É a última resposta, carregar steps
               if (answer.steps && answer.steps.length > 0) {
                 currentSteps = answer.steps.map((step) => ({
                   title: step.title,
@@ -432,14 +448,33 @@ export function LessonPlanProvider({
 
   useEffect(() => {
     const reconstructData = async () => {
-      if (isEditing && isDataLoaded && rootQueries.data && existingLessonPlan) {
-        await reconstructAxisData()
+      if (
+        isEditing &&
+        isDataLoaded &&
+        rootQueries.data &&
+        existingLessonPlan &&
+        !hasReconstructedRef.current
+      ) {
+        setIsReconstructing(true)
+        hasReconstructedRef.current = true
+        try {
+          await reconstructAxisData()
+        } catch (error) {
+          hasReconstructedRef.current = false // ← ADICIONAR (retry em caso de erro)
+        } finally {
+          setIsReconstructing(false) // ← ADICIONAR
+        }
       }
     }
 
     reconstructData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, isDataLoaded, rootQueries.data, existingLessonPlan])
+  }, [
+    isEditing,
+    isDataLoaded,
+    rootQueries.data,
+    existingLessonPlan,
+    reconstructAxisData,
+  ])
 
   // Função para obter steps de uma resposta
   const getStepsForAnswer = useCallback(
@@ -889,6 +924,7 @@ export function LessonPlanProvider({
     totalCompletedForms,
     totalForms: axisIds.length,
     isEditing,
+    isReconstructing,
     isOwner,
     originalAuthorId,
     currentUserId,
