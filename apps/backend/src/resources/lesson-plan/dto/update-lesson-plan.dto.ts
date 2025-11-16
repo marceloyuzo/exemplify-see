@@ -87,8 +87,8 @@ export class UpdateLessonPlanDto {
   complexity?: Complexity
 
   @IsEnum(ModalityType)
-  @IsNotEmpty()
-  modality: ModalityType
+  @IsOptional()
+  modality?: ModalityType
 
   @IsString()
   @IsNotEmpty()

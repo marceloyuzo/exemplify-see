@@ -43,8 +43,18 @@ export default function Header() {
               </Tooltip>
 
               <a
+                href="/"
+                onMouseDown={(e) => {
+                  if (e.button === 1) {
+                    window.open('/', '_blank')
+                  }
+                }}
+                onClick={(e) => {
+                  if (e.button !== 0) return
+                  e.preventDefault()
+                  router.push('/')
+                }}
                 className="cursor-pointer text-primary flex gap-2 items-center hover:text-primary/90"
-                onClick={() => router.push('/')}
               >
                 <Logo />
                 <span className="font-bold tracking-wide bg-[linear-gradient(to_right,var(--primary),var(--secondary))] bg-clip-text text-transparent">

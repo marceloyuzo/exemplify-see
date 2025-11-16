@@ -25,7 +25,7 @@ export interface CreateLessonPlanProps {
   complexity?: string
   year: string
   workload: string
-  modality: string
+  modality?: string
   contents: string[]
   materials: string[]
   priorKnowledge?: string
