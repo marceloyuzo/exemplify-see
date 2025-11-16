@@ -143,19 +143,19 @@ enum ModatilyType {
 }
 
 model LessonPlan {
-  id             String       @id @default(uuid())
+  id             String        @id @default(uuid())
   title          String
   description    String?
-  subjectId      String       @map("subject_id")
-  topicId        String?      @map("topic_id")
+  subjectId      String        @map("subject_id")
+  topicId        String?       @map("topic_id")
   complexity     Complexity?
   example        ExampleType?
   year           String
   workload       String
-  modality       ModatilyType
+  modality       ModatilyType?
   contents       String[]
   materials      String[]
-  priorKnowledge String?      @map("prior_knowledge")
+  priorKnowledge String?       @map("prior_knowledge")
 
   isPublic   Boolean   @default(true) @map("is_public")
   userId     String    @map("user_id")

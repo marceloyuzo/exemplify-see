@@ -36,13 +36,13 @@ const lessonPlanMetadataSchema = z.object({
   example: z.string().optional(),
   year: z.string().min(1, 'Ano/Semestre é obrigatório'),
   workload: z.string().min(1, 'Carga horária é obrigatório'),
-  modality: z.string().min(1, 'Modalidade é obrigatório'),
+  modality: z.string().optional(),
   contents: z
     .array(z.string().min(1, 'O valor do conteúdo é obrigatório.'))
-    .min(1, 'Pelo menos um conteúdo é obrigatória.'),
+    .min(0),
   materials: z
     .array(z.string().min(1, 'O valor do conteúdo é obrigatório.'))
-    .min(1, 'Pelo menos um conteúdo é obrigatória.'),
+    .min(0),
   priorKnowledge: z.string().optional(),
   isPublic: z.boolean(),
 })
@@ -165,8 +165,8 @@ export function LessonPlanProvider({
       subjectId: '',
       topicId: '',
       isPublic: false,
-      contents: [''],
-      materials: [''],
+      contents: [],
+      materials: [],
     },
   })
 
