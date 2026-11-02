@@ -66,22 +66,44 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy-backend:
-    name: Deploy do Backend na EC2
+    name: Deploy do Backend na Oracle
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     needs: [build-frontend, build-and-push-backend]
 
     steps:
-      - name: SSH no servidor EC2
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+      - name: Instalar cloudflared
+        run: |
+          curl -fsSL -o cloudflared.deb \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
 
-          script: |
-            cd /home/ec2-user/meu-app
-            docker compose pull meu-backend
-            docker compose up -d meu-backend
-            docker image prune -f
+      # O SSH passa pelo Cloudflare Tunnel (ProxyCommand), então a porta 22
+      # da VM não precisa estar aberta para os IPs do GitHub Actions.
+      - name: Configurar SSH
+        env:
+          SSH_KEY: ${{ secrets.ORACLE_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.ORACLE_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<'EOF'
+          Host oracle
+            HostName ssh.exemplify-see.com
+            User ubuntu
+            IdentityFile ~/.ssh/deploy_key
+            BatchMode yes
+            ProxyCommand cloudflared access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}
+          EOF
+
+      # A chave de deploy só executa /opt/exemplify-see/deploy.sh na VM
+      # (forced command no authorized_keys), qualquer que seja o comando.
+      - name: Deploy na VM
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: ssh oracle
