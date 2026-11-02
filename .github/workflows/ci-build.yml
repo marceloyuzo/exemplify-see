@@ -12,6 +12,7 @@ jobs:
   build-frontend:
     name: Validar Build do Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -36,6 +37,7 @@ jobs:
   build-backend:
     name: Validar Build do Backend (Docker)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -51,3 +53,5 @@ jobs:
           file: ./apps/backend/Dockerfile
           push: false
           tags: ci-build/meu-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
