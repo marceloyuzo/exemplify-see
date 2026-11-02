@@ -5,10 +5,15 @@ on:
     branches:
       - "master"
 
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
 jobs:
   build-frontend:
     name: Validar Build do Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -17,7 +22,7 @@ jobs:
       - name: Setup Node.js e Cache do Yarn
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "yarn"
 
       - name: Instalar dependências
@@ -33,6 +38,7 @@ jobs:
   build-and-push-backend:
     name: Build e Push do Backend (Docker Hub)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -53,17 +59,22 @@ jobs:
           context: .
           file: ./apps/backend/Dockerfile
           push: true
-          tags: marceloitami/exemplify-see-backend:latest
+          tags: |
+            marceloitami/exemplify-see-backend:latest
+            marceloitami/exemplify-see-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-backend:
     name: Deploy do Backend na EC2
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     needs: [build-frontend, build-and-push-backend]
 
     steps:
       - name: SSH no servidor EC2
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
@@ -72,5 +83,5 @@ jobs:
           script: |
             cd /home/ec2-user/meu-app
             docker compose pull meu-backend
-            docker compose up -d
+            docker compose up -d meu-backend
             docker image prune -f

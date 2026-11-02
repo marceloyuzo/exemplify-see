@@ -6,8 +6,9 @@ services:
     container_name: exemplifysee-backend
     ports:
       - "3000:3000"
+    mem_limit: 512m
     environment:
-      # Variáveis de ambiente do Firebase
+      NODE_OPTIONS: "--max-old-space-size=384"
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
